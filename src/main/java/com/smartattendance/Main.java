@@ -1,5 +1,5 @@
-package test.java.com;
+package com.smartattendance;
 
 public class Main {
-  
+    
 }
