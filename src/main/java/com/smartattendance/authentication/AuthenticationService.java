@@ -37,7 +37,7 @@ public class AuthenticationService {
         if (result.isSuccessful() && session != null) {
             try {
                 attendanceService.recordAttendance(student, session);
-            } catch (RuntimeException ex) {
+            } catch (Exception ex) {
                 var failure = new AuthenticationResult(
                         AuthenticationResult.Status.FAILED, student,
                         "Authenticated, but attendance recording failed: " + ex.getMessage());

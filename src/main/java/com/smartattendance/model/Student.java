@@ -1,9 +1,8 @@
 package com.smartattendance.model;
 
 /**
- * Represents a student. Holds the identifiers needed for the two
- * authentication modes the front desk uses: card tap (cardId) and
- * simulated iris biometric (biometricId).
+ * Represents a student. The inherited userId is the university
+ * registration number and is the canonical student identity.
  */
 public class Student extends User {
 
@@ -19,7 +18,28 @@ public class Student extends User {
         this.classId = classId;
     }
 
+    public Student(String registrationNumber, String name, String classId) {
+        this(registrationNumber, name, registrationNumber + "@university.edu",
+                "CARD-" + registrationNumber, "IRIS-" + registrationNumber, classId);
+    }
+
+    public String getId() {
+        return userId;
+    }
+
+    public String getStudentId() {
+        return userId;
+    }
+
+    public String getRegistrationNumber() {
+        return userId;
+    }
+
     public String getCardId() {
+        return cardId;
+    }
+
+    public String getCardUid() {
         return cardId;
     }
 

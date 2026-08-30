@@ -84,6 +84,11 @@ public class StudentRepository {
         return null;
     }
 
+    public boolean isEnrolledInClass(String studentId, String classId) {
+        Student student = findById(studentId);
+        return student != null && student.getClassId().equals(classId);
+    }
+
     public List<Student> findByClassId(String classId) {
         List<Student> results = new ArrayList<>();
         String sql = "SELECT * FROM students WHERE class_id = ?";

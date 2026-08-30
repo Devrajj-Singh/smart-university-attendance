@@ -13,7 +13,7 @@ public class IrisAuthentication implements AuthenticationMethod {
     private final Map<String, String> registeredBiometrics = new HashMap<>();
 
     public IrisAuthentication() {
-        registeredBiometrics.put("STU001", "IRIS001"); // dummy data
+        registeredBiometrics.put("25215101", "IRIS-25215101");
     }
 
     public void registerBiometric(String studentId, String biometricId) {

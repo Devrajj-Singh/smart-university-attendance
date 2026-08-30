@@ -20,6 +20,10 @@ public class SyncService {
         this.backend = backend;
     }
 
+    public SyncService() {
+        this(new AttendanceRepository(), new UniversityAttendanceBackend());
+    }
+
     public SyncRecord enqueue(String attendanceId) {
         var syncId = "SYNC-" + UUID.randomUUID();
         var syncRecord = new SyncRecord(syncId, attendanceId);
@@ -78,5 +82,21 @@ public class SyncService {
 
     public List<SyncRecord> getAllSyncRecords() {
         return new ArrayList<>(syncRecords.values());
+    }
+
+    public Map<String, Integer> getSyncStatus() {
+        Map<String, Integer> status = new LinkedHashMap<>();
+        status.put("PENDING", 0);
+        status.put("SYNCED", 0);
+        status.put("FAILED", 0);
+        for (SyncRecord record : syncRecords.values()) {
+            status.merge(record.getStatus().name(), 1, Integer::sum);
+        }
+        return status;
+    }
+
+    public boolean synchronizeData() {
+        triggerSync();
+        return syncRecords.values().stream().noneMatch(record -> record.getStatus() == SyncRecord.Status.FAILED);
     }
 }
