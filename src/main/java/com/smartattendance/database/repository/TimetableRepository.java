@@ -2,6 +2,7 @@ package com.smartattendance.database.repository;
 
 import com.smartattendance.database.DatabaseManager;
 import com.smartattendance.model.Timetable;
+import com.smartattendance.model.TimetableSlot;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -59,12 +60,32 @@ public class TimetableRepository {
         return queryByColumn("faculty_id", facultyId);
     }
 
-    public List<Timetable> findByClassId(String classId) {
-        return queryByColumn("class_id", classId);
+    public List<TimetableSlot> findByClassId(String classId) {
+        return toSlots(queryByColumn("class_id", classId));
     }
 
     public List<Timetable> findByDay(DayOfWeek day) {
         return queryByColumn("day_of_week", day.name());
+    }
+
+    public List<TimetableSlot> findByFacultyAndDay(String facultyId, DayOfWeek day) {
+        List<TimetableSlot> results = new ArrayList<>();
+        for (Timetable timetable : findByFacultyId(facultyId)) {
+            if (timetable.getDayOfWeek() == day) {
+                results.add(new TimetableSlot(timetable));
+            }
+        }
+        return results;
+    }
+
+    public List<TimetableSlot> findByClassroomAndDay(String classroomId, DayOfWeek day) {
+        List<TimetableSlot> results = new ArrayList<>();
+        for (Timetable timetable : findByDay(day)) {
+            if (timetable.getClassroomId().equals(classroomId)) {
+                results.add(new TimetableSlot(timetable));
+            }
+        }
+        return results;
     }
 
     public List<Timetable> findAll() {
@@ -118,5 +139,13 @@ public class TimetableRepository {
                 LocalTime.parse(rs.getString("start_time")),
                 LocalTime.parse(rs.getString("end_time"))
         );
+    }
+
+    private List<TimetableSlot> toSlots(List<Timetable> timetables) {
+        List<TimetableSlot> slots = new ArrayList<>();
+        for (Timetable timetable : timetables) {
+            slots.add(new TimetableSlot(timetable));
+        }
+        return slots;
     }
 }

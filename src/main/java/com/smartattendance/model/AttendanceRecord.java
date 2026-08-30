@@ -13,10 +13,6 @@ public class AttendanceRecord {
         CARD, BIOMETRIC, MANUAL
     }
 
-    public enum AttendanceStatus {
-        PRESENT, ABSENT, LATE
-    }
-
     private String recordId;
     private String sessionId;
     private String studentId;
@@ -35,6 +31,11 @@ public class AttendanceRecord {
         this.method = method;
         this.status = status;
         this.synced = synced;
+    }
+
+    public AttendanceRecord(String recordId, String studentId, String sessionId,
+                            LocalDateTime timestamp, AttendanceStatus status, String authenticationMethod) {
+        this(recordId, sessionId, studentId, timestamp, parseMethod(authenticationMethod), status, false);
     }
 
     public String getRecordId() {
@@ -71,5 +72,26 @@ public class AttendanceRecord {
 
     public void markSynced() {
         this.synced = true;
+    }
+
+    private static AuthMethod parseMethod(String authenticationMethod) {
+        if (authenticationMethod == null || authenticationMethod.isBlank()) {
+            return AuthMethod.MANUAL;
+        }
+        String normalized = authenticationMethod.trim().toUpperCase();
+        if (normalized.equals("ID_CARD") || normalized.equals("RFID") || normalized.equals("NFC") || normalized.equals("AUTOMATIC")) {
+            return AuthMethod.CARD;
+        }
+        if (normalized.equals("IRIS") || normalized.equals("BIOMETRIC")) {
+            return AuthMethod.BIOMETRIC;
+        }
+        return AuthMethod.MANUAL;
+    }
+
+    @Override
+    public String toString() {
+        return "AttendanceRecord{recordId='" + recordId + "', sessionId='" + sessionId
+                + "', studentId='" + studentId + "', status=" + status
+                + ", method=" + method + ", synced=" + synced + "}";
     }
 }

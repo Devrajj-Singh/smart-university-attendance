@@ -174,13 +174,13 @@ public class FacultyDashboard {
                     session.getSessionTime().format(DateTimeFormatter.ofPattern("HH:mm")) : "N/A";
                 
                 String scheduledFac = session.getScheduledFaculty() != null ?
-                    session.getScheduledFaculty().substring(0, Math.min(15, session.getScheduledFaculty().length())) : "N/A";
+                    session.getScheduledFaculty().getFacultyId() : session.getScheduledFacultyId();
                 
                 String actualFac = session.getActualFaculty() != null ?
-                    session.getActualFaculty().substring(0, Math.min(15, session.getActualFaculty().length())) : "N/A";
+                    session.getActualFaculty().getFacultyId() : session.getActualFacultyId();
                 
                 String status = session.getStatus() != null ? 
-                    session.getStatus() : "PENDING";
+                    session.getStatus().name() : "PENDING";
                 
                 System.out.printf("%-12s | %-8s | %-6s | %-8s | %-15s | %-15s | %-10s%n",
                     session.getSubject(),
@@ -249,11 +249,11 @@ public class FacultyDashboard {
         
         // Simulate student ID card scan
         System.out.println("\n[SIMULATION] Student ID card detected...");
-        System.out.print("Enter student ID (e.g., STU001): ");
+        System.out.print("Enter student registration number (e.g., 25215101): ");
         String studentId = scanner.nextLine().trim();
         
         if (studentId.isEmpty()) {
-            studentId = "STU001";  // Default for demo
+            studentId = "25215101";  // Default for demo
         }
         
         try {
@@ -325,11 +325,11 @@ public class FacultyDashboard {
      * Allow faculty to manually enter student attendance
      */
     private void enterManualAttendance(AttendanceSession session) {
-        System.out.println("\nEnter student IDs (one per line, empty line to finish):");
+        System.out.println("\nEnter student registration numbers (one per line, empty line to finish):");
         
         int count = 0;
         while (true) {
-            System.out.print("Student ID [" + (count + 1) + "]: ");
+            System.out.print("Registration No. [" + (count + 1) + "]: ");
             String studentId = scanner.nextLine().trim();
             
             if (studentId.isEmpty()) {
@@ -384,7 +384,7 @@ public class FacultyDashboard {
                 return;
             }
             
-            System.out.printf("%-12s | %-25s%n", "Student ID", "Timestamp");
+            System.out.printf("%-12s | %-25s%n", "Registration", "Timestamp");
             System.out.println("-".repeat(40));
             
             for (String record : attendedStudents) {
@@ -548,7 +548,7 @@ public class FacultyDashboard {
         System.out.println("-".repeat(50));
         
         try {
-            System.out.print("Student ID: ");
+            System.out.print("Student registration number: ");
             String studentId = scanner.nextLine().trim();
             
             System.out.print("Session ID: ");

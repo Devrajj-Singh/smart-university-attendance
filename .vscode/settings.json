@@ -4,5 +4,6 @@
     ],
     "java.project.testSourcePaths": [
         "src/test/java"
-    ]
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

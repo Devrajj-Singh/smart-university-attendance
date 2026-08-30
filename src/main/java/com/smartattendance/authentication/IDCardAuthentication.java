@@ -11,7 +11,7 @@ public class IDCardAuthentication implements AuthenticationMethod {
     private final Map<String, String> registeredCards = new HashMap<>();
 
     public IDCardAuthentication() {
-        registeredCards.put("STU001", "CARD001"); // dummy data
+        registeredCards.put("25215101", "CARD-25215101");
     }
 
     public void registerCard(String studentId, String cardId) {

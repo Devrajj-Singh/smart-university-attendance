@@ -27,41 +27,41 @@ public class LoginService {
         // Faculty 1
         DUMMY_CREDENTIALS.put("F001", "faculty123");
         FACULTY_DATA.put("F001", new Faculty(
-            "F001",
-            "Dr. Sharma",
-            "Computer Science",
-            "sharma@university.edu",
-            "Active"
+            "FAC001",
+            "Dr. Anita Rao",
+            "anita.rao@university.edu",
+            "EMP1001",
+            "Computer Science"
         ));
         
         // Faculty 2
         DUMMY_CREDENTIALS.put("F002", "faculty123");
         FACULTY_DATA.put("F002", new Faculty(
-            "F002",
-            "Dr. Verma",
-            "Information Technology",
-            "verma@university.edu",
-            "Active"
+            "FAC002",
+            "Prof. Sanjay Mehta",
+            "sanjay.mehta@university.edu",
+            "EMP1002",
+            "Computer Science"
         ));
         
         // Faculty 3
         DUMMY_CREDENTIALS.put("F003", "faculty123");
         FACULTY_DATA.put("F003", new Faculty(
-            "F003",
-            "Prof. Patel",
-            "Software Engineering",
-            "patel@university.edu",
-            "Active"
+            "FAC003",
+            "Dr. Priya Nair",
+            "priya.nair@university.edu",
+            "EMP1003",
+            "Computer Science"
         ));
         
         // Faculty 4
         DUMMY_CREDENTIALS.put("F004", "faculty123");
         FACULTY_DATA.put("F004", new Faculty(
-            "F004",
-            "Prof. Singh",
-            "Database Systems",
-            "singh@university.edu",
-            "Active"
+            "FAC004",
+            "Prof. Meera Singh",
+            "meera.singh@university.edu",
+            "EMP1004",
+            "Computer Science"
         ));
     }
     

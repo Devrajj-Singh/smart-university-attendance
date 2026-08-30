@@ -27,6 +27,10 @@ public class Faculty extends User {
         return employeeCode;
     }
 
+    public String getFacultyId() {
+        return userId;
+    }
+
     public String getDepartment() {
         return department;
     }

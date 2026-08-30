@@ -47,6 +47,10 @@ public class BiometricDevice {
         return lastSyncTime;
     }
 
+    public boolean isReady() {
+        return status == DeviceStatus.ONLINE;
+    }
+
     public void setStatus(DeviceStatus status) {
         this.status = status;
     }

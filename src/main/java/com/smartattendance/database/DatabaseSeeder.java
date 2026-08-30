@@ -38,6 +38,7 @@ public final class DatabaseSeeder {
         if (alreadySeeded(connection)) {
             return;
         }
+        clearPartialSeed(connection);
 
         ClassSectionRepository classSectionRepository = new ClassSectionRepository();
         ClassroomRepository classroomRepository = new ClassroomRepository();
@@ -70,7 +71,7 @@ public final class DatabaseSeeder {
         facultyRepository.insert(f2);
         facultyRepository.insert(f3);
 
-        // ---- 15 students, split across the two class sections ----
+        // ---- 65 students with registration numbers 25215101 through 25215165 ----
         String[][] studentData = {
             {"Aarav Sharma", "CLS001"}, {"Vivaan Gupta", "CLS001"}, {"Aditya Singh", "CLS001"},
             {"Diya Patel", "CLS001"}, {"Ananya Reddy", "CLS001"}, {"Ishaan Verma", "CLS001"},
@@ -78,14 +79,15 @@ public final class DatabaseSeeder {
             {"Arjun Nair", "CLS002"}, {"Aadhya Menon", "CLS002"}, {"Reyansh Bose", "CLS002"},
             {"Kiara Das", "CLS002"}, {"Vihaan Rao", "CLS002"}, {"Anika Chatterjee", "CLS002"}
         };
-        for (int i = 0; i < studentData.length; i++) {
-            String userId = String.format("STU%03d", i + 1);
-            String name = studentData[i][0];
-            String classId = studentData[i][1];
+        for (int i = 0; i < 65; i++) {
+            String registrationNumber = String.valueOf(25215101 + i);
+            String[] template = studentData[i % studentData.length];
+            String name = template[0] + " " + String.format("%02d", i + 1);
+            String classId = i < 35 ? "CLS001" : "CLS002";
             String email = name.toLowerCase().replace(" ", ".") + "@university.edu";
-            String cardId = String.format("CARD%04d", 1000 + i);
-            String biometricId = String.format("IRIS%04d", 5000 + i);
-            studentRepository.insert(new Student(userId, name, email, cardId, biometricId, classId));
+            String cardId = "CARD-" + registrationNumber;
+            String biometricId = "IRIS-" + registrationNumber;
+            studentRepository.insert(new Student(registrationNumber, name, email, cardId, biometricId, classId));
         }
 
         // ---- a handful of timetable entries ----
@@ -100,19 +102,33 @@ public final class DatabaseSeeder {
         timetableRepository.insert(new Timetable("TT005", "SUB001", "CLS001", "FAC001", "ROOM001",
                 DayOfWeek.THURSDAY, LocalTime.of(9, 0), LocalTime.of(10, 0)));
 
-        System.out.println("Dummy data seeded: 15 students, 3 faculty, 2 subjects, 2 classes, 3 classrooms, 5 timetable entries.");
+        System.out.println("Dummy data seeded: 65 students, 3 faculty, 2 subjects, 2 classes, 3 classrooms, 5 timetable entries.");
     }
 
     private static boolean alreadySeeded(Connection connection) {
         try (Statement stmt = connection.createStatement()) {
             var rs = stmt.executeQuery("SELECT COUNT(*) FROM students");
             if (rs.next()) {
-                return rs.getInt(1) > 0;
+                return rs.getInt(1) >= 65;
             }
         } catch (SQLException e) {
             // Table probably doesn't exist yet - caller should run initializeSchema() first.
             return false;
         }
         return false;
+    }
+
+    private static void clearPartialSeed(Connection connection) {
+        String[] tables = {
+            "attendance_records", "attendance_sessions", "faculty_delegations", "timetable",
+            "faculty_subjects", "students", "faculty", "subjects", "classrooms", "class_sections"
+        };
+        try (Statement stmt = connection.createStatement()) {
+            for (String table : tables) {
+                stmt.executeUpdate("DELETE FROM " + table);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to clear partial seed data: " + e.getMessage(), e);
+        }
     }
 }

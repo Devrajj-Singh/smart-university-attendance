@@ -399,10 +399,12 @@ public class DashboardService {
         try {
             AuditLog log = new AuditLog(
                 UUID.randomUUID().toString(),
-                action,
-                details,
                 performedBy,
-                LocalDateTime.now()
+                action,
+                "DASHBOARD",
+                action,
+                LocalDateTime.now(),
+                details
             );
             
             auditLogs.add(log);
@@ -439,7 +441,7 @@ public class DashboardService {
                 log.getLogId().substring(0, 8),
                 log.getTimestamp().toString(),
                 log.getAction(),
-                log.getPerformedBy());
+                log.getActorId());
         }
     }
 }

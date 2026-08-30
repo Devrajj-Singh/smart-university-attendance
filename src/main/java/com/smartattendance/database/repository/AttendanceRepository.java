@@ -3,9 +3,11 @@ package com.smartattendance.database.repository;
 import com.smartattendance.database.DatabaseManager;
 import com.smartattendance.model.AttendanceRecord;
 import com.smartattendance.model.AttendanceSession;
+import com.smartattendance.model.AttendanceStatus;
 import com.smartattendance.model.Classroom;
 import com.smartattendance.model.ClassSection;
 import com.smartattendance.model.Faculty;
+import com.smartattendance.model.SessionStatus;
 import com.smartattendance.model.Subject;
 
 import java.sql.Connection;
@@ -45,16 +47,16 @@ public class AttendanceRepository {
     // ---------- Attendance Sessions ----------
 
     public void insertSession(AttendanceSession session) {
-        String sql = "INSERT INTO attendance_sessions " +
+        String sql = "INSERT OR REPLACE INTO attendance_sessions " +
                 "(session_id, subject_id, class_id, classroom_id, scheduled_faculty_id, actual_faculty_id, " +
                 "start_time, end_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, session.getSessionId());
-            ps.setString(2, session.getSubject().getSubjectId());
-            ps.setString(3, session.getClassSection().getClassId());
-            ps.setString(4, session.getClassroom().getClassroomId());
-            ps.setString(5, session.getScheduledFaculty().getUserId());
-            ps.setString(6, session.getActualFaculty() != null ? session.getActualFaculty().getUserId() : null);
+            ps.setString(2, session.getSubjectId());
+            ps.setString(3, session.getClassId());
+            ps.setString(4, session.getClassroomId());
+            ps.setString(5, session.getScheduledFacultyId());
+            ps.setString(6, session.getActualFacultyId());
             ps.setString(7, session.getStartTime().toString());
             ps.setString(8, session.getEndTime().toString());
             ps.setString(9, session.getStatus().name());
@@ -109,7 +111,7 @@ public class AttendanceRepository {
         return results;
     }
 
-    public void updateSessionStatus(String sessionId, AttendanceSession.SessionStatus status, String actualFacultyId) {
+    public void updateSessionStatus(String sessionId, SessionStatus status, String actualFacultyId) {
         String sql = "UPDATE attendance_sessions SET status = ?, actual_faculty_id = ? WHERE session_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, status.name());
@@ -149,6 +151,21 @@ public class AttendanceRepository {
         return queryRecords("student_id", studentId);
     }
 
+    public AttendanceRecord findById(String recordId) {
+        String sql = "SELECT * FROM attendance_records WHERE record_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, recordId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRecordRow(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find attendance record: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
     public List<AttendanceRecord> findUnsyncedRecords() {
         List<AttendanceRecord> results = new ArrayList<>();
         String sql = "SELECT * FROM attendance_records WHERE synced = 0";
@@ -171,6 +188,10 @@ public class AttendanceRepository {
         } catch (SQLException e) {
             throw new RuntimeException("Failed to mark record synced: " + e.getMessage(), e);
         }
+    }
+
+    public void markSynced(String recordId) {
+        markRecordSynced(recordId);
     }
 
     private List<AttendanceRecord> queryRecords(String column, String value) {
@@ -208,7 +229,7 @@ public class AttendanceRepository {
                 actualFaculty,
                 LocalDateTime.parse(rs.getString("start_time")),
                 LocalDateTime.parse(rs.getString("end_time")),
-                AttendanceSession.SessionStatus.valueOf(rs.getString("status"))
+                SessionStatus.valueOf(rs.getString("status"))
         );
     }
 
@@ -219,7 +240,7 @@ public class AttendanceRepository {
                 rs.getString("student_id"),
                 LocalDateTime.parse(rs.getString("timestamp")),
                 AttendanceRecord.AuthMethod.valueOf(rs.getString("method")),
-                AttendanceRecord.AttendanceStatus.valueOf(rs.getString("status")),
+                AttendanceStatus.valueOf(rs.getString("status")),
                 rs.getInt("synced") == 1
         );
     }
