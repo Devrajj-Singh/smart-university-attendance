@@ -39,6 +39,7 @@ export default function SessionControllerPage() {
   const [stats, setStats] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [pendingDoorTaps, setPendingDoorTaps] = useState<any[]>([]);
+  const [violations, setViolations] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeRosterTab, setActiveRosterTab] = useState<'DOOR_LEDGER' | 'ALL_STUDENTS'>('DOOR_LEDGER');
   const [isLoading, setIsLoading] = useState(true);
@@ -136,11 +137,34 @@ export default function SessionControllerPage() {
         setStats(data.stats);
         setStudents(data.students || []);
         setPendingDoorTaps(data.pendingDoorTaps || []);
+        setViolations(data.violations || []);
       }
     } catch (err) {
       console.error(err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePardonViolation = async (violationId: string, studentId?: string) => {
+    try {
+      const res = await fetch('/api/attendance/violation', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ violationId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (studentId) {
+          await handleVerifyDoorStudent(studentId);
+        } else {
+          await loadSessionData();
+        }
+      } else {
+        alert(data.error || 'Failed to pardon student violation');
+      }
+    } catch {
+      alert('Network error pardoning student violation');
     }
   };
 
@@ -259,7 +283,7 @@ export default function SessionControllerPage() {
     <div className="flex-1 flex w-full bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 antialiased font-sans transition-colors duration-200">
       <Sidebar />
 
-      <main className="flex-1 p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      <main className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 pb-24 md:pb-8 w-full overflow-hidden">
         
         {/* Uncramped Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 transition-colors shadow-sm dark:shadow-2xl">
@@ -324,6 +348,54 @@ export default function SessionControllerPage() {
             )}
           </div>
         </div>
+
+        {/* Real-time Anti-Cheat Classroom Security Alert Banner */}
+        {violations.filter((v) => !v.cleared_by_faculty).length > 0 && (
+          <div className="p-4 sm:p-5 rounded-3xl bg-rose-50 dark:bg-rose-950/70 border border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200 shadow-xl space-y-3 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-rose-200 dark:border-rose-800/80 pb-3">
+              <div className="flex items-center space-x-2.5">
+                <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 animate-pulse" />
+                <div>
+                  <h3 className="text-xs sm:text-sm font-bold text-rose-950 dark:text-rose-100 uppercase tracking-wider font-mono">
+                    Anti-Cheat Watchdog: {violations.filter((v) => !v.cleared_by_faculty).length} Active Security Breach{violations.filter((v) => !v.cleared_by_faculty).length > 1 ? 'es' : ''}
+                  </h3>
+                  <p className="text-[11px] text-rose-800 dark:text-rose-300">
+                    Student switched apps/tabs or pulled notification shade during check-in. Session locked on central server.
+                  </p>
+                </div>
+              </div>
+              <span className="self-start sm:self-auto px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-rose-200/80 dark:bg-rose-900/80 text-rose-950 dark:text-rose-100 border border-rose-300 dark:border-rose-700">
+                Server-Side Lockout Active
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
+              {violations.filter((v) => !v.cleared_by_faculty).map((v) => (
+                <div key={v.violation_id} className="p-3 rounded-2xl bg-white/90 dark:bg-black/70 border border-rose-200 dark:border-rose-800/70 flex items-center justify-between gap-3 shadow-xs">
+                  <div className="text-xs space-y-0.5">
+                    <div className="font-bold text-zinc-900 dark:text-white flex items-center space-x-1.5">
+                      <span>{v.student_name || 'Unidentified Student'}</span>
+                      <span className="font-mono text-[10px] text-zinc-500">({v.student_id})</span>
+                    </div>
+                    <div className="text-[11px] text-rose-700 dark:text-rose-400 font-medium">
+                      Trigger: <span className="font-mono font-bold">{v.violation_type}</span>
+                    </div>
+                    <div className="text-[10px] text-zinc-400 font-mono">
+                      {new Date(v.timestamp).toLocaleTimeString()} • Device: {v.device_fingerprint || 'Mobile'}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handlePardonViolation(v.violation_id, v.student_id)}
+                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold shrink-0 transition-all shadow-xs cursor-pointer"
+                  >
+                    Pardon & Verify
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Live Metrics Row */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">

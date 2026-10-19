@@ -141,6 +141,18 @@ async function runTests() {
 
     // 9. Anti-Proxy Scoped Device Binding: Same Lecture Rejection
     console.log('\n[TEST 9] Anti-Proxy Rule: Device Binding Scoped to Lecture Session');
+    // First tap at door for student 25215102
+    await fetch(`${BASE_URL}/api/attendance/mark`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId,
+        studentIdentifier: '25215102',
+        action: 'DOOR_TAP',
+        deviceId: 'DOOR_KIOSK_101',
+      }),
+    });
+
     const proxyAttemptRes = await fetch(`${BASE_URL}/api/attendance/mark`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -248,6 +260,18 @@ async function runTests() {
     });
     const sess2Data = await sess2Res.json();
     const sessionId2 = sess2Data.sessionId;
+
+    // First tap at door for student 25215136 in Lecture 2
+    await fetch(`${BASE_URL}/api/attendance/mark`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: sessionId2,
+        studentIdentifier: '25215136',
+        action: 'DOOR_TAP',
+        deviceId: 'DOOR_KIOSK_102',
+      }),
+    });
 
     // Student in Lecture 2 uses DEV-A1B2C (which was used in Lecture 1)
     const backToBackRes = await fetch(`${BASE_URL}/api/attendance/mark`, {

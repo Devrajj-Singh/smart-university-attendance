@@ -38,6 +38,7 @@ export default function AdminPage() {
   const [syncStats, setSyncStats] = useState<any>(null);
   const [isSimulatedOffline, setIsSimulatedOffline] = useState(false);
   const [offlineNodes, setOfflineNodes] = useState<any[]>([]);
+  const [securityViolations, setSecurityViolations] = useState<any[]>([]);
 
   // Diagnostic health check state
   const [isRunningDiagnostic, setIsRunningDiagnostic] = useState(false);
@@ -84,11 +85,12 @@ export default function AdminPage() {
 
   const loadAdminData = async () => {
     try {
-      const [userRes, delRes, reportRes, syncRes] = await Promise.all([
+      const [userRes, delRes, reportRes, syncRes, violRes] = await Promise.all([
         fetch('/api/auth/me').then((r) => r.json()),
         fetch('/api/delegation').then((r) => r.json()),
         fetch('/api/reports').then((r) => r.json()),
         fetch('/api/sync').then((r) => r.json()),
+        fetch('/api/attendance/violation?all=true').then((r) => r.json()).catch(() => ({ violations: [] })),
       ]);
 
       if (!userRes.authenticated || userRes.user.role !== 'ADMIN') {
@@ -98,6 +100,7 @@ export default function AdminPage() {
 
       setUser(userRes.user);
       setDelegations(delRes.delegations || []);
+      setSecurityViolations(violRes?.violations || []);
       if (syncRes.success) {
         setSyncStats(syncRes.stats);
         setOfflineNodes(syncRes.offlineNodes || []);
@@ -143,7 +146,7 @@ export default function AdminPage() {
     <div className="flex-1 flex w-full bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 antialiased font-sans transition-colors duration-200">
       <Sidebar userRole="ADMIN" />
 
-      <main className="flex-1 p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      <main className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 pb-24 md:pb-8 w-full overflow-hidden">
         
         {/* Real-time Faculty Offline Alert Banner */}
         {isSimulatedOffline && (
@@ -426,6 +429,88 @@ export default function AdminPage() {
                             : 'bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-800/80 text-amber-700 dark:text-amber-400'
                         }`}>
                           {del.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Academic Integrity & Anti-Cheat Audit Trail */}
+        <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-2xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-900 pb-3">
+            <div>
+              <div className="flex items-center space-x-2">
+                <ShieldCheck className="w-4 h-4 text-rose-500" />
+                <h2 className="text-sm font-bold text-zinc-900 dark:text-white font-mono uppercase tracking-wider">
+                  Academic Integrity & Anti-Cheat Audit Trail
+                </h2>
+              </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                Executive supervisory record of application switches, notification shade pulls, and proxy attempts across university lectures.
+              </p>
+            </div>
+            <span className="self-start sm:self-auto px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800/80 text-rose-700 dark:text-rose-300">
+              {securityViolations.filter(v => !v.cleared_by_faculty).length} Active Lockout{securityViolations.filter(v => !v.cleared_by_faculty).length !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-zinc-200 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-900/40 text-zinc-500 dark:text-zinc-400 font-mono uppercase tracking-wider text-[10px]">
+                  <th className="py-3 px-4 font-semibold">Student & ID</th>
+                  <th className="py-3 px-4 font-semibold">Lecture & Section</th>
+                  <th className="py-3 px-4 font-semibold">Faculty / Room</th>
+                  <th className="py-3 px-4 font-semibold">Tamper Trigger</th>
+                  <th className="py-3 px-4 font-semibold">Hardware ID</th>
+                  <th className="py-3 px-4 font-semibold">Incident Time</th>
+                  <th className="py-3 px-4 font-semibold text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-900">
+                {securityViolations.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-zinc-500 font-mono">
+                      No security or anti-cheat violations detected. All student sessions verified integral.
+                    </td>
+                  </tr>
+                ) : (
+                  securityViolations.map((v) => (
+                    <tr key={v.violation_id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                      <td className="py-3.5 px-4 font-medium text-zinc-900 dark:text-white">
+                        <span>{v.student_name || 'Unregistered Card'}</span>
+                        <span className="font-mono text-zinc-400 dark:text-zinc-500 block text-[11px]">{v.student_id}</span>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-zinc-700 dark:text-zinc-300">
+                        {v.subject_name || v.session_id}
+                        <span className="text-[10px] text-zinc-400 dark:text-zinc-500 block">{v.class_name || 'CSE Section'}</span>
+                      </td>
+                      <td className="py-3.5 px-4 text-zinc-700 dark:text-zinc-300">
+                        {v.faculty_name || 'Assigned Faculty'}
+                        <span className="text-[10px] text-zinc-400 dark:text-zinc-500 block">Room {v.room_number || '101'}</span>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80">
+                          {v.violation_type}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-[11px] text-zinc-500 dark:text-zinc-400">
+                        {v.device_fingerprint || 'WEB_CLIENT'}
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-[11px] text-zinc-500 dark:text-zinc-400">
+                        {new Date(v.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border ${
+                          v.cleared_by_faculty
+                            ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-400'
+                            : 'bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800/80 text-rose-700 dark:text-rose-400'
+                        }`}>
+                          {v.cleared_by_faculty ? 'PARDONED' : 'LOCKED OUT'}
                         </span>
                       </td>
                     </tr>

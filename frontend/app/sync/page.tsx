@@ -82,7 +82,7 @@ export default function SyncHubPage() {
     <div className="flex-1 flex w-full bg-black text-zinc-100 antialiased font-sans">
       <Sidebar />
 
-      <main className="flex-1 p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      <main className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 pb-24 md:pb-8 w-full overflow-hidden">
         
         {/* Header */}
         <div className="p-6 rounded-3xl bg-zinc-950 border border-zinc-800 transition-colors shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">

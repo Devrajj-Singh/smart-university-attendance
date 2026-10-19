@@ -85,6 +85,16 @@ export async function GET(
     const absentCount = totalEnrolled - (presentCount + lateCount + pendingCount);
     const attendancePercentage = totalEnrolled > 0 ? Math.round(((presentCount + lateCount) / totalEnrolled) * 100) : 0;
 
+    // Fetch active security violations for this session
+    const violations = await query<any>(
+      `SELECT v.*, s.name as student_name
+       FROM security_violations v
+       LEFT JOIN students s ON v.student_id = s.user_id
+       WHERE v.session_id = ?
+       ORDER BY v.timestamp DESC`,
+      [sessionId]
+    );
+
     return NextResponse.json({
       success: true,
       session,
@@ -98,6 +108,7 @@ export async function GET(
       },
       pendingDoorTaps,
       students: enrolledStudents,
+      violations,
     });
   } catch (err: any) {
     console.error('[API/SESSION/DETAIL] Error:', err);

@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS attendance_sessions (
     status VARCHAR(50) DEFAULT 'ACTIVE',
     session_type VARCHAR(50) DEFAULT 'AUTOMATIC',
     pairing_token VARCHAR(100),
+    window_override BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -140,6 +141,32 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     entity_id VARCHAR(100),
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     details TEXT
+);
+
+-- 14. Security Violations
+CREATE TABLE IF NOT EXISTS security_violations (
+    violation_id VARCHAR(100) PRIMARY KEY,
+    session_id VARCHAR(100) REFERENCES attendance_sessions(session_id) ON DELETE CASCADE,
+    student_id VARCHAR(50) REFERENCES students(user_id) ON DELETE CASCADE,
+    device_fingerprint VARCHAR(150),
+    violation_type VARCHAR(100) NOT NULL,
+    details TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    cleared_by_faculty BOOLEAN DEFAULT FALSE,
+    cleared_by VARCHAR(50) REFERENCES faculty(user_id),
+    cleared_at TIMESTAMP
+);
+
+-- 15. Session Device Bindings (Strict 1-Device-to-1-Student Scoped Per Session)
+CREATE TABLE IF NOT EXISTS session_device_bindings (
+    binding_id VARCHAR(100) PRIMARY KEY,
+    session_id VARCHAR(100) REFERENCES attendance_sessions(session_id) ON DELETE CASCADE,
+    device_fingerprint VARCHAR(150) NOT NULL,
+    student_id VARCHAR(50) REFERENCES students(user_id) ON DELETE CASCADE,
+    ip_address VARCHAR(100),
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_session_device UNIQUE (session_id, device_fingerprint)
 );
 
 -- SEED DATA

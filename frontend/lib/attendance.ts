@@ -252,6 +252,41 @@ export async function processAttendanceRecord({
     };
   }
 
+  // 5b. Anti-Cheat Security Violation Check (Server-Side Lockdown)
+  // If student or device has an uncleared violation in this session, refuse check-in immediately.
+  const activeViolation = await queryOne<any>(
+    `SELECT violation_id, violation_type, timestamp FROM security_violations
+     WHERE session_id = ? 
+       AND ((student_id IS NOT NULL AND student_id = ?) OR (device_fingerprint IS NOT NULL AND device_fingerprint = ?))
+       AND cleared_by_faculty = FALSE
+     ORDER BY timestamp DESC LIMIT 1`,
+    [sessionId, student.user_id, deviceId || '']
+  );
+
+  if (activeViolation) {
+    return {
+      success: false,
+      code: 'SECURITY_LOCKOUT',
+      studentId: student.user_id,
+      studentName: student.name,
+      message: `SECURITY LOCKOUT: Session revoked due to ${activeViolation.violation_type}. Academic integrity flag recorded. Please approach faculty for in-person clearance.`,
+    };
+  }
+
+  // 5c. 2FA Physical Proximity Pre-Condition
+  // When method is DUAL_FACTOR (mobile student check-in), the student MUST have physically tapped their ID card at the door kiosk first!
+  if (method === 'DUAL_FACTOR') {
+    if (!existing || existing.status !== 'TAPPED_PENDING') {
+      return {
+        success: false,
+        code: 'DOOR_TAP_REQUIRED',
+        studentId: student.user_id,
+        studentName: student.name,
+        message: `Physical Door Kiosk RFID tap required before mobile confirmation. Please tap your university ID card at the classroom entrance terminal first.`,
+      };
+    }
+  }
+
   // 6. Anti-Proxy Scoped Device Binding Check
   // STRICTLY SCOPED TO THIS session_id: A device cannot submit for two different students in the same lecture.
   // In a subsequent lecture (different session_id), the device is free to submit again without collision.
@@ -262,6 +297,7 @@ export async function processAttendanceRecord({
     deviceId.startsWith('PIN:');
 
   if (!isSystemDevice) {
+    // Check both attendance_records and session_device_bindings
     const deviceConflict = await queryOne<any>(
       `SELECT ar.student_id, st.name 
        FROM attendance_records ar
@@ -270,13 +306,20 @@ export async function processAttendanceRecord({
       [sessionId, deviceId, student.user_id]
     );
 
-    if (deviceConflict) {
+    const bindingConflict = await queryOne<any>(
+      `SELECT student_id FROM session_device_bindings
+       WHERE session_id = ? AND device_fingerprint = ? AND student_id != ?`,
+      [sessionId, deviceId, student.user_id]
+    );
+
+    if (deviceConflict || bindingConflict) {
+      const conflictingStudent = deviceConflict?.student_id || bindingConflict?.student_id;
       return {
         success: false,
         code: 'DEVICE_ALREADY_REGISTERED',
         studentId: student.user_id,
         studentName: student.name,
-        message: `REJECTED: Device [${deviceId}] has already registered attendance for student ${deviceConflict.student_id} in this lecture.`,
+        message: `REJECTED: Device [${deviceId}] has already registered attendance for student ${conflictingStudent} in this lecture. 1 device per student strictly enforced.`,
       };
     }
   }
@@ -319,6 +362,20 @@ export async function processAttendanceRecord({
        VALUES (?, ?, ?, ?, ?, ?, FALSE, ?)`,
       [recordId, sessionId, student.user_id, timestampStr, method, status, finalDeviceId]
     );
+  }
+
+  // 8b. Persist Device Scoped Binding in PostgreSQL (Immune to browser cache / data clearing)
+  if (!isSystemDevice && deviceId) {
+    try {
+      await execute(
+        `INSERT INTO session_device_bindings (binding_id, session_id, device_fingerprint, student_id)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT (session_id, device_fingerprint) DO NOTHING`,
+        ['BIND-' + Math.random().toString(36).substring(2, 10).toUpperCase(), sessionId, deviceId, student.user_id]
+      );
+    } catch (bindErr) {
+      console.warn('[ATTENDANCE] Error binding device in session_device_bindings:', bindErr);
+    }
   }
 
   // 9. Log in Central Audit Trail
