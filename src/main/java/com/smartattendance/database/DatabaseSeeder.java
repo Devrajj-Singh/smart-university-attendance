@@ -72,17 +72,24 @@ public final class DatabaseSeeder {
         facultyRepository.insert(f3);
 
         // ---- 65 students with registration numbers 25215101 through 25215165 ----
-        String[][] studentData = {
-            {"Aarav Sharma", "CLS001"}, {"Vivaan Gupta", "CLS001"}, {"Aditya Singh", "CLS001"},
-            {"Diya Patel", "CLS001"}, {"Ananya Reddy", "CLS001"}, {"Ishaan Verma", "CLS001"},
-            {"Saanvi Iyer", "CLS001"}, {"Kabir Joshi", "CLS002"}, {"Myra Kapoor", "CLS002"},
-            {"Arjun Nair", "CLS002"}, {"Aadhya Menon", "CLS002"}, {"Reyansh Bose", "CLS002"},
-            {"Kiara Das", "CLS002"}, {"Vihaan Rao", "CLS002"}, {"Anika Chatterjee", "CLS002"}
+        String[] fullStudentNames = {
+            "Aarav Sharma", "Vivaan Gupta", "Aditya Singh", "Diya Patel", "Ananya Reddy",
+            "Ishaan Verma", "Saanvi Iyer", "Rohan Kulkarni", "Sneha Deshmukh", "Devansh Malhotra",
+            "Priya Nambiar", "Vikramaditya Rao", "Tanya Kapoor", "Rahul Chatterjee", "Aditi Sen",
+            "Kabir Mehta", "Ishita Choudhury", "Siddharth Bhat", "Riya Bhattacharya", "Ayush Saxena",
+            "Pooja Nair", "Nikhil Agarwal", "Meera Menon", "Shreyas Joshi", "Divya Pillai",
+            "Harsh Vardhan", "Neha Pandey", "Kunal Tiwari", "Kavya Trivedi", "Pranav Mukherjee",
+            "Shruti Mishra", "Gaurav Dubey", "Lavanya Sundaram", "Tarun Bajaj", "Simran Kaur",
+            "Aryan Khanna", "Natasha Bose", "Ritvik Das", "Tanvi Hegde", "Varun Ranganathan",
+            "Pallavi Goswami", "Yash Singhal", "Deepa Venkatesh", "Mohit Oberoi", "Swati Sethi",
+            "Armaan Sheikh", "Kritika Rawat", "Samarth Kaushik", "Rashmi Soni", "Akshat Jain",
+            "Chetna Bansal", "Dhruv Solanki", "Mansi Chauhan", "Parth Jindal", "Vidya Krishnan",
+            "Chirag Somani", "Shalini Yadav", "Alok Srivastava", "Anjali Thapar", "Bhavya Nayak",
+            "Udit Mathur", "Garima Shukla", "Rishabh Chawla", "Mallika Dasgupta", "Tejas Sheth"
         };
         for (int i = 0; i < 65; i++) {
             String registrationNumber = String.valueOf(25215101 + i);
-            String[] template = studentData[i % studentData.length];
-            String name = template[0] + " " + String.format("%02d", i + 1);
+            String name = fullStudentNames[i];
             String classId = i < 35 ? "CLS001" : "CLS002";
             String email = name.toLowerCase().replace(" ", ".") + "@university.edu";
             String cardId = "CARD-" + registrationNumber;

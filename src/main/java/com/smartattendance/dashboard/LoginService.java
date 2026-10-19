@@ -113,6 +113,16 @@ public class LoginService {
     public List<String> getAvailableFacultyIds() {
         return new ArrayList<>(DUMMY_CREDENTIALS.keySet());
     }
+
+    /**
+     * Resolve a faculty member's display name by their login id (e.g. "F001").
+     * Returns null when the id is unknown, so the caller can fall back to the
+     * raw id instead of showing a bare duplicate.
+     */
+    public String getFacultyName(String facultyId) {
+        Faculty faculty = FACULTY_DATA.get(facultyId);
+        return faculty == null ? null : faculty.getName();
+    }
     
     /**
      * Display login instructions

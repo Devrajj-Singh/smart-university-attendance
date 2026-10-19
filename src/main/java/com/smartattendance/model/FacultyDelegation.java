@@ -86,6 +86,10 @@ public class FacultyDelegation {
         return reason;
     }
 
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
     public boolean isApproved() {
         return approved;
     }

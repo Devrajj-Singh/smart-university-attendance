@@ -30,3 +30,10 @@ replay_pid*
 database/*.db
 database/*.db-shm
 database/*.db-wal
+
+# Node & Next.js
+**/node_modules/
+**/.next/
+**/out/
+*.tsbuildinfo
+.env*.local

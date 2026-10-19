@@ -27,6 +27,74 @@ public class FacultyDelegationService {
     }
     
     /**
+     * Request a delegation that starts in PENDING state. The requesting
+     * faculty (normally the scheduled faculty) later approves it, moving it
+     * to ACTIVE and wiring the alternate faculty onto the session.
+     *
+     * @return the created delegation, or null if the request was invalid
+     */
+    public FacultyDelegation requestDelegation(String sessionId,
+                                               String originalFacultyId,
+                                               String alternateFacultyId,
+                                               String reason) {
+        if (sessionId == null || sessionId.trim().isEmpty()
+                || originalFacultyId == null || originalFacultyId.trim().isEmpty()
+                || alternateFacultyId == null || alternateFacultyId.trim().isEmpty()) {
+            return null;
+        }
+        if (originalFacultyId.equals(alternateFacultyId)) {
+            return null;
+        }
+        if (getActiveDelegation(sessionId) != null) {
+            return null;
+        }
+
+        FacultyDelegation delegation = new FacultyDelegation(
+                UUID.randomUUID().toString(),
+                sessionId,
+                originalFacultyId,
+                alternateFacultyId,
+                originalFacultyId,
+                LocalDateTime.now(),
+                "PENDING"
+        );
+        delegation.setReason(reason == null || reason.trim().isEmpty() ? "Faculty unavailability" : reason.trim());
+        delegations.put(delegation.getDelegationId(), delegation);
+        return delegation;
+    }
+
+    /**
+     * Approve a PENDING delegation, moving it to ACTIVE and mapping the
+     * alternate faculty as the current faculty for the session.
+     *
+     * @return the delegation if approved, otherwise null
+     */
+    public FacultyDelegation approveDelegation(String delegationId) {
+        FacultyDelegation delegation = delegations.get(delegationId);
+        if (delegation == null || !"PENDING".equals(delegation.getStatus())) {
+            return null;
+        }
+        delegation.approve();
+        sessionToCurrentFaculty.put(delegation.getSessionId(), delegation.getAlternateFaculty());
+        return delegation;
+    }
+
+    /**
+     * Get any delegation by its delegation id.
+     */
+    public FacultyDelegation getDelegationById(String delegationId) {
+        return delegations.get(delegationId);
+    }
+
+    /**
+     * Silently revoke a delegation (used when the original faculty simply
+     * takes the class back). Equivalent to revokeDelegation without console output.
+     */
+    public boolean revokeDelegationQuietly(String delegationId) {
+        return revokeDelegation(delegationId);
+    }
+
+    /**
      * Assign an alternate faculty to a session
      * 
      * @param sessionId Session ID

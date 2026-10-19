@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class AttendanceRecord {
 
     public enum AuthMethod {
-        CARD, BIOMETRIC, MANUAL
+        CARD, BIOMETRIC, CARD_AND_IRIS, MANUAL
     }
 
     private String recordId;
@@ -78,7 +78,10 @@ public class AttendanceRecord {
         if (authenticationMethod == null || authenticationMethod.isBlank()) {
             return AuthMethod.MANUAL;
         }
-        String normalized = authenticationMethod.trim().toUpperCase();
+String normalized = authenticationMethod.trim().toUpperCase();
+        if (normalized.contains("CARD") && normalized.contains("IRIS")) {
+            return AuthMethod.CARD_AND_IRIS;
+        }
         if (normalized.equals("ID_CARD") || normalized.equals("RFID") || normalized.equals("NFC") || normalized.equals("AUTOMATIC")) {
             return AuthMethod.CARD;
         }
