@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   GraduationCap, 
@@ -162,29 +163,39 @@ export default function LoginPage() {
           <div className="lg:col-span-6 space-y-6">
             <div className="p-8 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-5 shadow-xl dark:shadow-2xl">
               
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-[11px] font-mono">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400" />
-                <span>Next-Gen Smart Attendance 2FA-PPV</span>
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/80 text-indigo-700 dark:text-indigo-300 text-[11px] font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                <span>Enterprise AI Biometrics & n8n Automation SaaS</span>
               </div>
 
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight leading-tight">
                 Dual-Factor Physical Attendance. <br />
-                <span className="text-zinc-500 dark:text-zinc-400 font-medium">Zero Biometric Hardware.</span>
+                <span className="text-indigo-600 dark:text-indigo-400 font-bold">Edge AI Biometrics & n8n.</span>
               </h1>
 
               <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                Classroom Door RFID tap + 15-second rolling projector QR code. Enforces session-scoped anti-proxy device binding, seamless back-to-back classes, and dead phone battery ledger overrides.
+                Classroom Door RFID tap + sub-35ms Edge 128-D facial/iris vector matching. Zero phone reliance, 100% proxy elimination, autonomous compliance intelligence, n8n event pipelines, and CRM integration.
               </p>
 
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80">
-                  <span className="text-xs font-semibold text-zinc-900 dark:text-white block">Anti-Proxy Watchdog</span>
-                  <p className="text-[11px] text-zinc-500 mt-0.5">W3C Page Visibility single-use session revoker.</p>
+                  <span className="text-xs font-semibold text-zinc-900 dark:text-white block">Edge Biometric Kiosk</span>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">128-D Cosine similarity matching (&ge; 0.85) in &lt;35ms.</p>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80">
-                  <span className="text-xs font-semibold text-zinc-900 dark:text-white block">Student Attendance Engine</span>
-                  <p className="text-[11px] text-zinc-500 mt-0.5">Statutory accreditation audits and CSV reports.</p>
+                  <span className="text-xs font-semibold text-zinc-900 dark:text-white block">AI Compliance & n8n</span>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">Automated breach forecasts, HubSpot CRM, & Twilio SMS.</p>
                 </div>
+              </div>
+
+              <div className="pt-1">
+                <Link
+                  href="/architecture"
+                  className="inline-flex items-center space-x-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors"
+                >
+                  <span>Explore Interactive Architecture Mind-Map</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
 
               {/* Quick Demo Credentials */}

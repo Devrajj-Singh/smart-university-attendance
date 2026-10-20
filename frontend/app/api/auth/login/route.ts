@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error('[API/LOGIN] Error:', err);
     return NextResponse.json(
-      { error: 'An unexpected server error occurred during authentication.' },
+      { error: err?.message ? `Authentication service error: ${err.message}` : 'An unexpected server error occurred during authentication.' },
       { status: 500 }
     );
   }
