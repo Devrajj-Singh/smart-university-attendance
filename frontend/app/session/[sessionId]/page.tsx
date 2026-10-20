@@ -739,10 +739,22 @@ export default function SessionControllerPage() {
 
                       <div className="flex items-center space-x-2">
                         {isPresent ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800/80 flex items-center space-x-1">
-                            <Check className="w-3 h-3" />
-                            <span>Present</span>
-                          </span>
+                          <div className="flex items-center space-x-1.5">
+                            {(st.method === 'RFID_AND_IRIS' || st.attendance_method === 'RFID_AND_IRIS') && (
+                              <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                                RFID + Biometric AI
+                              </span>
+                            )}
+                            {(st.method === 'FACULTY_VERIFIED' || st.attendance_method === 'FACULTY_VERIFIED') && (
+                              <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700">
+                                Faculty Override
+                              </span>
+                            )}
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800/80 flex items-center space-x-1">
+                              <Check className="w-3 h-3" />
+                              <span>Present</span>
+                            </span>
+                          </div>
                         ) : isPending ? (
                           <div className="flex items-center space-x-1.5">
                             <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80 animate-pulse">

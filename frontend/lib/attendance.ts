@@ -148,6 +148,7 @@ export async function processAttendanceRecord({
   method,            // 'DUAL_FACTOR' | 'CARD' | 'TERMINAL_PIN' | 'FACULTY_VERIFIED' | 'MANUAL'
   deviceId,          // Digital token / browser UUID / 'DEV-XXXX'
   challengePin,      // Optional 6-digit PIN from door kiosk
+  confidenceScore,   // Optional biometric match confidence (0.0 to 1.0)
   attemptTime = new Date(),
   bypassWindow = false,
 }: {
@@ -156,6 +157,7 @@ export async function processAttendanceRecord({
   method: string;
   deviceId?: string;
   challengePin?: string;
+  confidenceScore?: number;
   attemptTime?: Date;
   bypassWindow?: boolean;
 }): Promise<MarkAttendanceResult> {
@@ -253,14 +255,28 @@ export async function processAttendanceRecord({
   }
 
   // 5b. Anti-Cheat Security Violation Check (Server-Side Lockdown)
-  // If student or device has an uncleared violation in this session, refuse check-in immediately.
+  // If student has an uncleared violation, or their personal mobile device is flagged, refuse check-in.
+  // Shared door kiosk terminals (isSystemDevice) are never locked out globally for other students.
+  const isSystemDevice = !deviceId || 
+    deviceId === 'DESKTOP_CONTROLLER' || 
+    deviceId === 'MANUAL_FACULTY' || 
+    deviceId === 'FACULTY_OVERRIDE' ||
+    deviceId === 'DOOR_KIOSK_101' ||
+    deviceId.startsWith('DEV-ROOM') ||
+    deviceId.startsWith('TERMINAL_') ||
+    deviceId.startsWith('PIN:');
+
   const activeViolation = await queryOne<any>(
-    `SELECT violation_id, violation_type, timestamp FROM security_violations
-     WHERE session_id = ? 
-       AND ((student_id IS NOT NULL AND student_id = ?) OR (device_fingerprint IS NOT NULL AND device_fingerprint = ?))
-       AND cleared_by_faculty = FALSE
-     ORDER BY timestamp DESC LIMIT 1`,
-    [sessionId, student.user_id, deviceId || '']
+    isSystemDevice
+      ? `SELECT violation_id, violation_type, timestamp FROM security_violations
+         WHERE session_id = ? AND student_id = ? AND cleared_by_faculty = FALSE
+         ORDER BY timestamp DESC LIMIT 1`
+      : `SELECT violation_id, violation_type, timestamp FROM security_violations
+         WHERE session_id = ? 
+           AND (student_id = ? OR device_fingerprint = ?)
+           AND cleared_by_faculty = FALSE
+         ORDER BY timestamp DESC LIMIT 1`,
+    isSystemDevice ? [sessionId, student.user_id] : [sessionId, student.user_id, deviceId]
   );
 
   if (activeViolation) {
@@ -273,8 +289,41 @@ export async function processAttendanceRecord({
     };
   }
 
-  // 5c. 2FA Physical Proximity Pre-Condition
-  // When method is DUAL_FACTOR (mobile student check-in), the student MUST have physically tapped their ID card at the door kiosk first!
+  // 5c. Dual-Factor Edge Biometric Validation (RFID Smart Card + Face / Iris AI)
+  const isBiometricMethod = method === 'RFID_AND_IRIS' || method === 'CAMERA_IRIS' || method === 'BIOMETRIC_IRIS';
+  if (isBiometricMethod && confidenceScore !== undefined) {
+    if (confidenceScore < 0.85) {
+      // Impostor proxy detected! Log security breach
+      const violId = 'VIOL-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+      try {
+        await execute(
+          `INSERT INTO security_violations (violation_id, session_id, student_id, device_fingerprint, violation_type, details, timestamp, cleared_by_faculty)
+           VALUES (?, ?, ?, ?, 'BIOMETRIC_MISMATCH', ?, ?, FALSE)`,
+          [
+            violId,
+            sessionId,
+            student.user_id,
+            deviceId || 'DOOR_KIOSK_101',
+            `Biometric mismatch: ${(confidenceScore * 100).toFixed(1)}% match < 85.0% threshold. Impostor proxy detected.`,
+            new Date().toISOString(),
+          ]
+        );
+      } catch (err) {
+        console.error('Failed to log biometric violation:', err);
+      }
+
+      return {
+        success: false,
+        code: 'BIOMETRIC_MISMATCH',
+        studentId: student.user_id,
+        studentName: student.name,
+        message: `BIOMETRIC_MISMATCH: Live biometric capture (${(confidenceScore * 100).toFixed(1)}%) does not match enrolled template for ${student.name}. Impostor flagged.`,
+      };
+    }
+  }
+
+  // 5d. 2FA Physical Proximity Pre-Condition
+  // When method is DUAL_FACTOR (personal mobile student check-in), the student MUST have physically tapped their ID card at the door kiosk first!
   if (method === 'DUAL_FACTOR') {
     if (!existing || existing.status !== 'TAPPED_PENDING') {
       return {
@@ -288,14 +337,8 @@ export async function processAttendanceRecord({
   }
 
   // 6. Anti-Proxy Scoped Device Binding Check
-  // STRICTLY SCOPED TO THIS session_id: A device cannot submit for two different students in the same lecture.
-  // In a subsequent lecture (different session_id), the device is free to submit again without collision.
-  const isSystemDevice = !deviceId || 
-    deviceId === 'DESKTOP_CONTROLLER' || 
-    deviceId === 'MANUAL_FACULTY' || 
-    deviceId === 'FACULTY_OVERRIDE' ||
-    deviceId.startsWith('PIN:');
-
+  // STRICTLY SCOPED TO THIS session_id: A personal mobile device cannot submit for two different students in the same lecture.
+  // Shared institutional terminals (door kiosks, podium controllers) are exempt.
   if (!isSystemDevice) {
     // Check both attendance_records and session_device_bindings
     const deviceConflict = await queryOne<any>(

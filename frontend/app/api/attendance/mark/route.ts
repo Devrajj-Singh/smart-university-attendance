@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
       deviceId, 
       challengePin, 
       action, 
+      confidenceScore,
       overrideTime,
       bypassWindow 
     } = body;
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
       method: method || 'CARD',
       deviceId: effectiveDeviceId,
       challengePin,
+      confidenceScore,
       attemptTime,
       bypassWindow: effectiveBypassWindow,
     });
