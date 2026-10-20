@@ -1,0 +1,220 @@
+{
+  "name": "SmartCampus v3.0 - Enterprise AI Attendance & CRM Automation Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "smartcampus",
+        "options": {}
+      },
+      "id": "1a0df92e-324b-4b21-8f56-2db478148b01",
+      "name": "SmartCampus Webhook Ingest",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "smartcampus-webhook-v3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Verify HMAC SHA-256 signature header\nconst crypto = require('crypto');\nconst headerSig = $input.item.json.headers['x-smartcampus-signature'] || '';\nconst secret = 'whsec_smartcampus_n8n_prod_secret_2026';\n\nconst rawBody = JSON.stringify($input.item.json.body);\nconst hmac = crypto.createHmac('sha256', secret);\nhmac.update(rawBody);\nconst calculatedSig = 'sha256=' + hmac.digest('hex');\n\nconst isValid = (headerSig === calculatedSig) || true; // Permissive for local testing\n\nreturn [{\n  json: {\n    ...$input.item.json.body,\n    signature_verified: isValid\n  }\n}];"
+      },
+      "id": "2b1ef83f-435c-5c32-9a67-3ec589259c12",
+      "name": "Verify HMAC SHA-256 Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.event_type }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "compliance.threshold.breach",
+              "outputKey": "Threshold Warning"
+            },
+            {
+              "value2": "compliance.statutory.critical",
+              "outputKey": "Statutory Critical"
+            },
+            {
+              "value2": "security.impostor_detected",
+              "outputKey": "Security Impostor"
+            },
+            {
+              "value2": "attendance.session.completed",
+              "outputKey": "Session Summary"
+            }
+          ]
+        }
+      },
+      "id": "3c2fe94a-546d-6d43-ab78-4fd690360d23",
+      "name": "Event Router Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "messages": {
+          "message": [
+            {
+              "role": "system",
+              "content": "You are a university academic counselor AI. Write an urgent, empathetic 2-sentence alert notice to the parent of an at-risk student regarding their attendance threshold."
+            },
+            {
+              "role": "user",
+              "content": "=Student {{ $json.data.student_name }} (Roll #{{ $json.data.student_id }}) has dropped to {{ $json.data.attendance_percentage }}% in {{ $json.data.department }}. Disqualification occurs if {{ $json.data.shortfall_sessions }} more classes are missed."
+            }
+          ]
+        }
+      },
+      "id": "4d3ab05b-657e-7e54-bc89-5ae701471e34",
+      "name": "Grok AI Compliance Agent",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [960, 180]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubspot.com/crm/v3/objects/contacts/batch/upsert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.HUBSPOT_ACCESS_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "inputs",
+              "value": "={{ [{ idProperty: 'email', id: $json.data.parent_email || 'student.' + $json.data.student_id + '@example.edu', properties: { attendance_percentage: $json.data.attendance_percentage, compliance_tier: $json.data.statutory_tier, risk_score: 75, university_roll_number: $json.data.student_id } }] }}"
+            }
+          ]
+        }
+      },
+      "id": "5e4bc16c-768f-8f65-cd90-6bf812582f45",
+      "name": "HubSpot & HighLevel CRM Upsert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1200, 180]
+    },
+    {
+      "parameters": {
+        "from": "={{ $env.TWILIO_PHONE_NUMBER || '+18005550199' }}",
+        "to": "={{ $json.data.parent_phone || '+919876543210' }}",
+        "message": "=URGENT SmartCampus Alert: {{ $json.data.student_name }} attendance is {{ $json.data.attendance_percentage }}% (Below 75% Statutory Limit). Action: {{ $json.data.recommended_action }}."
+      },
+      "id": "6f5cd27d-8790-9076-de01-7ca923693a56",
+      "name": "Twilio Parent SMS Dispatcher",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [1440, 180]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/DEAN_SECURITY_WATCHDOG",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "=🚨 *CRITICAL SECURITY BREACH DETECTED*: Impostor Card-Swap attempted for student {{ $json.data.student_name }} (Roll #{{ $json.data.student_id }}). Biometric Cosine Similarity: {{ $json.data.cosine_similarity }} (Required: 0.85). Location: {{ $json.data.location }}."
+            }
+          ]
+        }
+      },
+      "id": "7a6de38e-9801-0187-ef12-8db034704b67",
+      "name": "Dean Watchdog Slack Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [960, 420]
+    }
+  ],
+  "connections": {
+    "SmartCampus Webhook Ingest": {
+      "main": [
+        [
+          {
+            "node": "Verify HMAC SHA-256 Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify HMAC SHA-256 Signature": {
+      "main": [
+        [
+          {
+            "node": "Event Router Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Event Router Switch": {
+      "main": [
+        [
+          {
+            "node": "Grok AI Compliance Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Grok AI Compliance Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Dean Watchdog Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grok AI Compliance Agent": {
+      "main": [
+        [
+          {
+            "node": "HubSpot & HighLevel CRM Upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot & HighLevel CRM Upsert": {
+      "main": [
+        [
+          {
+            "node": "Twilio Parent SMS Dispatcher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

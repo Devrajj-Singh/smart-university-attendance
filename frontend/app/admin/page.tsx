@@ -29,6 +29,10 @@ import {
   BarChart3,
   CalendarDays
 } from 'lucide-react';
+import CRMPipelineKanbanBoard from '@/components/CRMPipelineKanbanBoard';
+import TwilioSMSSandbox from '@/components/TwilioSMSSandbox';
+import WebhookConsole from '@/components/WebhookConsole';
+import AIAttendanceIntelligenceCard from '@/components/AIAttendanceIntelligenceCard';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -364,6 +368,18 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+
+        {/* AI Compliance Intelligence Engine */}
+        <AIAttendanceIntelligenceCard classId="CLS001" />
+
+        {/* Visual CRM Pipeline Kanban Board */}
+        <CRMPipelineKanbanBoard />
+
+        {/* Multi-Channel Twilio SMS Notification Sandbox */}
+        <TwilioSMSSandbox />
+
+        {/* Enterprise Event Bus & Webhook Dispatcher Console */}
+        <WebhookConsole />
 
         {/* Dean Audit Trail: Faculty Substitutions */}
         <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-2xl space-y-4">

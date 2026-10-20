@@ -9,7 +9,8 @@ import {
   Users, 
   FileSpreadsheet, 
   ShieldCheck,
-  Scan
+  Scan,
+  Network
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -51,6 +52,12 @@ export default function Sidebar({ userRole }: SidebarProps) {
       href: '/terminal',
       icon: Scan,
       badge: 'Edge AI',
+    },
+    {
+      title: 'System Architecture',
+      href: '/architecture',
+      icon: Network,
+      badge: 'Blueprint',
     },
     {
       title: 'Timetable Matrix',
@@ -159,7 +166,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
                 <Icon className="w-4 h-4" />
               </div>
               <span className="text-[10px] tracking-tight mt-0.5 truncate max-w-[62px]">
-                {item.title.replace('Dean Admin Console', 'Admin').replace('Student Attendance Reports', 'Reports').replace('Faculty Delegation', 'Delegation').replace('Timetable Matrix', 'Timetable')}
+                {item.title.replace('Dean Admin Console', 'Admin').replace('Student Attendance Reports', 'Reports').replace('Faculty Delegation', 'Delegation').replace('Timetable Matrix', 'Timetable').replace('System Architecture', 'Arch')}
               </span>
             </Link>
           );

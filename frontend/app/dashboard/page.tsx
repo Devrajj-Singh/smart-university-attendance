@@ -22,6 +22,7 @@ import {
   Scan,
   ShieldAlert
 } from 'lucide-react';
+import AIAttendanceIntelligenceCard from '@/components/AIAttendanceIntelligenceCard';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -37,10 +38,6 @@ export default function DashboardPage() {
   const [manualClass, setManualClass] = useState('');
   const [manualRoom, setManualRoom] = useState('');
   const [isStarting, setIsStarting] = useState(false);
-
-  // Door Tap Simulator feedback state
-  const [simFeedback, setSimFeedback] = useState<string | null>(null);
-  const [isSimulatingTaps, setIsSimulatingTaps] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -100,30 +97,6 @@ export default function DashboardPage() {
       alert('Network error initializing session');
     } finally {
       setIsStarting(false);
-    }
-  };
-
-  const handleSimulateDoorTaps = async (sessionId: string, mode: 'ALL' | 'PARTIAL' | 'RESET' | 'BIOMETRIC_ALL' | 'IMPOSTOR') => {
-    setIsSimulatingTaps(true);
-    setSimFeedback(null);
-    try {
-      const res = await fetch('/api/attendance/simulate-door-taps', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, mode }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setSimFeedback(data.message);
-        loadDashboardData();
-        setTimeout(() => setSimFeedback(null), 5000);
-      } else {
-        alert(data.error || 'Failed to simulate door taps');
-      }
-    } catch {
-      alert('Error communicating with door tap simulator');
-    } finally {
-      setIsSimulatingTaps(false);
     }
   };
 
@@ -237,65 +210,11 @@ export default function DashboardPage() {
                 )}
               </div>
             </div>
-
-            {/* CLASSROOM ENTRANCE TERMINAL SIMULATOR (Dual-Factor Edge AI) */}
-            {!isAdmin && (
-              <div className="pt-3 border-t border-zinc-100 dark:border-zinc-900">
-                <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center space-x-1.5">
-                      <Scan className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Classroom Entrance Terminal Simulator (Dual-Factor Edge AI)</span>
-                    </span>
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                      Simulate entrance kiosk swiping RFID smart cards and running real-time visual vector matching (Cosine Similarity ≥ 85%). Zero student phone dependency.
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      onClick={() => handleSimulateDoorTaps(activeSession.session_id, 'BIOMETRIC_ALL')}
-                      disabled={isSimulatingTaps}
-                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-xs cursor-pointer disabled:opacity-50 flex items-center space-x-1"
-                    >
-                      <Sparkles className="w-3 h-3" />
-                      <span>⚡ Verify All via Biometrics (100%)</span>
-                    </button>
-                    <button
-                      onClick={() => handleSimulateDoorTaps(activeSession.session_id, 'IMPOSTOR')}
-                      disabled={isSimulatingTaps}
-                      className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold shadow-xs cursor-pointer disabled:opacity-50 flex items-center space-x-1"
-                    >
-                      <ShieldAlert className="w-3 h-3" />
-                      <span>⚡ Test Impostor Swap</span>
-                    </button>
-                    <button
-                      onClick={() => handleSimulateDoorTaps(activeSession.session_id, 'PARTIAL')}
-                      disabled={isSimulatingTaps}
-                      className="px-3 py-1.5 rounded-xl bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white text-[11px] font-bold shadow-xs cursor-pointer disabled:opacity-50"
-                    >
-                      85% Tap
-                    </button>
-                    <button
-                      onClick={() => handleSimulateDoorTaps(activeSession.session_id, 'RESET')}
-                      disabled={isSimulatingTaps}
-                      className="px-2.5 py-1.5 rounded-xl text-zinc-500 hover:text-red-600 dark:hover:text-red-400 text-[11px] font-medium transition-colors cursor-pointer"
-                    >
-                      Reset
-                    </button>
-                  </div>
-                </div>
-
-                {simFeedback && (
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-mono mt-2 flex items-center space-x-1">
-                    <Check className="w-3.5 h-3.5" />
-                    <span>{simFeedback}</span>
-                  </p>
-                )}
-              </div>
-            )}
           </div>
         )}
+
+        {/* Autonomous AI Attendance & Compliance Briefing */}
+        <AIAttendanceIntelligenceCard classId="CLS001" />
 
         {/* Live Academic Telemetry */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

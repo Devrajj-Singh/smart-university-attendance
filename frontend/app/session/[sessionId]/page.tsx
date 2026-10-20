@@ -10,7 +10,6 @@ import {
   Users, 
   CheckCircle2, 
   AlertCircle, 
-  QrCode, 
   UserCheck, 
   UserX,
   RefreshCw, 
@@ -22,7 +21,6 @@ import {
   Search,
   Check,
   X,
-  Maximize2,
   Unlock,
   Lock,
   Copy,
@@ -67,14 +65,7 @@ export default function SessionControllerPage() {
   const [simStudentId, setSimStudentId] = useState('25215101');
   const [simMethod, setSimMethod] = useState('CARD');
 
-  // Dynamic Rolling QR code state (15s rotation)
-  const [rollingSeconds, setRollingSeconds] = useState(15);
-  const [rollingToken, setRollingToken] = useState('AUTH-' + Math.random().toString(36).substring(2, 7).toUpperCase());
-  const [qrSvg, setQrSvg] = useState<string>('');
-  const [showFullscreenQr, setShowFullscreenQr] = useState(false);
-
-  // Active Embedded Terminal Tab: 'BIOMETRIC' (Default) vs 'PROJECTOR_QR'
-  const [activeTerminalTab, setActiveTerminalTab] = useState<'BIOMETRIC' | 'PROJECTOR_QR'>('BIOMETRIC');
+  // Enrolled Roster & Selected Student for Edge Biometric Testing
   const [selectedKioskStudent, setSelectedKioskStudent] = useState<string>('25215101');
   const [isBiometricTesting, setIsBiometricTesting] = useState(false);
   const [biometricFeedback, setBiometricFeedback] = useState<BiometricMatchResult | null>(null);
@@ -261,75 +252,11 @@ export default function SessionControllerPage() {
     reader.readAsDataURL(file);
   };
 
-  // Network Host Configuration for Smartphone Wi-Fi QR access
-  const [networkHost, setNetworkHost] = useState('192.168.1.6:3000');
-  const [isCustomizingHost, setIsCustomizingHost] = useState(false);
-  const [tempHost, setTempHost] = useState('');
-
-  // Discover and set reachable Wi-Fi host on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('smartcampus_network_host');
-      if (saved) {
-        setNetworkHost(saved);
-        return;
-      }
-      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        setNetworkHost(window.location.host);
-        return;
-      }
-    }
-    fetch('/api/network/lan-ip')
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && data.lanIp && !data.lanIp.startsWith('127.') && !data.lanIp.startsWith('172.')) {
-          setNetworkHost(`${data.lanIp}:${data.port || '3000'}`);
-        } else {
-          setNetworkHost('192.168.1.6:3000');
-        }
-      })
-      .catch(() => {
-        setNetworkHost('192.168.1.6:3000');
-      });
-  }, []);
-
   useEffect(() => {
     loadSessionData();
     const interval = setInterval(loadSessionData, 3000); // Poll every 3 seconds for live updates
     return () => clearInterval(interval);
   }, [sessionId]);
-
-  // Rolling QR code generator & 15s countdown
-  useEffect(() => {
-    const updateQr = async () => {
-      // Ensure target is accessible over Wi-Fi
-      const effectiveHost = networkHost || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? window.location.host : '192.168.1.6:3000');
-      const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
-      const checkinUrl = `${protocol}//${effectiveHost}/checkin?session=${sessionId}&token=${rollingToken}&ts=${Date.now()}`;
-      try {
-        const res = await fetch(`/api/qr?text=${encodeURIComponent(checkinUrl)}&width=320`);
-        const svgText = await res.text();
-        setQrSvg(svgText);
-      } catch (err) {
-        console.error('Failed to generate rolling QR SVG:', err);
-      }
-    };
-
-    updateQr();
-
-    const timer = setInterval(() => {
-      setRollingSeconds((prev) => {
-        if (prev <= 1) {
-          const nextTok = 'AUTH-' + Math.random().toString(36).substring(2, 7).toUpperCase();
-          setRollingToken(nextTok);
-          return 15;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [sessionId, rollingToken, networkHost]);
 
   const loadSessionData = async () => {
     try {
@@ -708,42 +635,21 @@ export default function SessionControllerPage() {
           {/* LEFT 5-COL: Embedded Edge Biometric Terminal & Hardware Kiosk */}
           <div className="lg:col-span-5 p-5 sm:p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 flex flex-col justify-between shadow-sm dark:shadow-2xl">
             <div>
-              {/* Terminal View Switcher (Biometric AI vs Fallback Rolling QR) */}
+              {/* Edge Biometric Kiosk Header */}
               <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-900 pb-3 mb-3">
-                <div className="flex items-center space-x-1.5 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                  <button
-                    onClick={() => setActiveTerminalTab('BIOMETRIC')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                      activeTerminalTab === 'BIOMETRIC'
-                        ? 'bg-white dark:bg-black text-zinc-900 dark:text-white shadow-xs'
-                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <Scan className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Edge Biometric Kiosk</span>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveTerminalTab('PROJECTOR_QR')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                      activeTerminalTab === 'PROJECTOR_QR'
-                        ? 'bg-white dark:bg-black text-zinc-900 dark:text-white shadow-xs'
-                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <QrCode className="w-3.5 h-3.5 text-zinc-400" />
-                    <span>Projector QR</span>
-                  </button>
+                <div className="flex items-center space-x-2">
+                  <Scan className="w-4 h-4 text-emerald-500" />
+                  <span className="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-wider font-mono">
+                    Edge Biometric Kiosk Node
+                  </span>
                 </div>
-
-                <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
-                  {activeTerminalTab === 'BIOMETRIC' ? 'Door Node 101' : 'Secondary Fallback'}
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+                  Door Terminal 101 • Live
                 </span>
               </div>
 
-              {activeTerminalTab === 'BIOMETRIC' ? (
-                /* BIOMETRIC TERMINAL VIEW */
-                <div className="space-y-4">
+              {/* BIOMETRIC TERMINAL VIEW */}
+              <div className="space-y-4">
                   
                   {/* High-Tech Optical Sensor Viewport Simulation */}
                   <div className="relative rounded-2xl bg-zinc-950 border border-zinc-800 p-4 overflow-hidden h-44 flex flex-col items-center justify-center text-center shadow-inner">
@@ -882,82 +788,7 @@ export default function SessionControllerPage() {
                   )}
 
                 </div>
-              ) : (
-                /* PROJECTOR QR VIEW */
-                <div className="py-2 flex flex-col items-center justify-center space-y-3">
-                  <div className="relative p-4 rounded-3xl bg-white shadow-xl flex flex-col items-center justify-center border border-zinc-200 dark:border-zinc-700">
-                    {qrSvg ? (
-                      <div 
-                        dangerouslySetInnerHTML={{ __html: qrSvg }} 
-                        className="w-44 h-44 sm:w-52 sm:h-52 [&>svg]:w-full [&>svg]:h-full"
-                      />
-                    ) : (
-                      <div className="w-44 h-44 flex items-center justify-center text-xs text-black font-mono">
-                        Generating scannable QR...
-                      </div>
-                    )}
-                    
-                    <div className="mt-2 text-center">
-                      <span className="text-[11px] font-mono font-bold tracking-widest text-black bg-zinc-100 px-3 py-0.5 rounded border border-zinc-300">
-                        {rollingToken}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Countdown Progress Ring */}
-                  <div className="flex items-center justify-center space-x-2 text-xs font-mono text-zinc-500 dark:text-zinc-400">
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Token rotates in <strong className="text-zinc-900 dark:text-white font-bold">{rollingSeconds}s</strong></span>
-                  </div>
-
-                  {/* Classroom Wi-Fi Endpoint Control */}
-                  <div className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-left space-y-1">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500">
-                      <span>Endpoint: http://{networkHost}</span>
-                      <button
-                        onClick={() => {
-                          setTempHost(networkHost);
-                          setIsCustomizingHost(!isCustomizingHost);
-                        }}
-                        className="underline font-bold text-zinc-700 dark:text-zinc-300 cursor-pointer"
-                      >
-                        {isCustomizingHost ? 'Cancel' : 'Change'}
-                      </button>
-                    </div>
-                    {isCustomizingHost && (
-                      <div className="flex items-center space-x-1.5 pt-1">
-                        <input
-                          type="text"
-                          value={tempHost}
-                          onChange={(e) => setTempHost(e.target.value)}
-                          placeholder="e.g. 192.168.1.6:3000"
-                          className="flex-1 px-2 py-1 text-[11px] font-mono bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none"
-                        />
-                        <button
-                          onClick={() => {
-                            const clean = tempHost.trim() || '192.168.1.6:3000';
-                            setNetworkHost(clean);
-                            localStorage.setItem('smartcampus_network_host', clean);
-                            setIsCustomizingHost(false);
-                          }}
-                          className="px-2.5 py-1 text-[10px] font-bold bg-zinc-900 text-white dark:bg-white dark:text-black rounded-lg cursor-pointer"
-                        >
-                          Save
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => setShowFullscreenQr(true)}
-                    className="w-full py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-900 dark:text-white flex items-center justify-center space-x-2 transition-all cursor-pointer"
-                  >
-                    <Maximize2 className="w-3.5 h-3.5" />
-                    <span>Project Fullscreen Display</span>
-                  </button>
-                </div>
-              )}
-            </div>
+              </div>
 
             {/* Standalone Fullscreen Kiosk Launcher */}
             <div className="pt-3 border-t border-zinc-100 dark:border-zinc-900">
@@ -1130,16 +961,16 @@ export default function SessionControllerPage() {
                             <button
                               onClick={() => handleTestGenuineBiometric(st.user_id || st.student_id)}
                               className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-[10px] font-bold transition-all cursor-pointer"
-                              title="Trigger biometric scan for this student"
+                              title="Simulate edge biometric tap for this student"
                             >
-                              ⚡ Scan
+                              ⚡ Biometric Tap
                             </button>
                             <button
                               onClick={() => handleVerifyDoorStudent(st.user_id || st.student_id)}
                               className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black text-[10px] font-bold transition-all shadow-xs cursor-pointer"
-                              title="Faculty manual override"
+                              title="Faculty manual visual presence override"
                             >
-                              Mark Present
+                              Visual Override
                             </button>
                           </div>
                         )}
@@ -1155,53 +986,6 @@ export default function SessionControllerPage() {
         </div>
 
       </main>
-
-      {/* Fullscreen Projector Modal */}
-      {showFullscreenQr && (
-        <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-8 select-none">
-          <button
-            onClick={() => setShowFullscreenQr(false)}
-            className="absolute top-6 right-6 p-3 rounded-2xl bg-zinc-900 text-white hover:bg-zinc-800 text-sm font-bold"
-          >
-            ✕ Exit Projector Display
-          </button>
-
-          <div className="text-center space-y-4 max-w-lg w-full">
-            <div className="w-12 h-12 rounded-2xl bg-white text-black font-black text-xl flex items-center justify-center mx-auto shadow-lg">
-              CU
-            </div>
-            <div>
-              <h2 className="text-2xl font-black text-white tracking-wider uppercase">
-                {session?.subject_name} ({session?.subject_code})
-              </h2>
-              <p className="text-xs text-zinc-400 mt-1 font-mono">
-                Scan with any smartphone camera to certify physical attendance
-              </p>
-            </div>
-
-            <div className="p-6 bg-white rounded-3xl inline-block mx-auto shadow-2xl border-4 border-zinc-700">
-              <div 
-                dangerouslySetInnerHTML={{ __html: qrSvg }} 
-                className="w-72 h-72 sm:w-80 sm:h-80 [&>svg]:w-full [&>svg]:h-full"
-              />
-              <p className="mt-3 font-mono text-xs font-black tracking-widest text-black bg-zinc-100 py-1 rounded border border-zinc-300">
-                {rollingToken}
-              </p>
-            </div>
-
-            <div className="text-xs font-mono text-zinc-400 flex items-center justify-center space-x-2">
-              <RefreshCw className="w-4 h-4 animate-spin text-zinc-300" />
-              <span>Token rotates in <strong className="text-white font-bold">{rollingSeconds}s</strong></span>
-            </div>
-
-            <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-300 flex items-center justify-center space-x-1.5">
-              <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-              <span className="text-zinc-500">Classroom Mobile Link:</span>
-              <strong className="text-emerald-400">http://{networkHost}/checkin</strong>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );

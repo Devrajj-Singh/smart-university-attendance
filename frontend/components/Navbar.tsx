@@ -10,7 +10,8 @@ import {
   ChevronDown,
   Sun,
   Moon,
-  Clock
+  Clock,
+  Network
 } from 'lucide-react';
 
 interface AuthUser {
@@ -125,6 +126,19 @@ export default function Navbar() {
         {/* Right Action Tools */}
         <div className="flex items-center space-x-2.5">
           
+          {/* Public Architecture Mind-Map Blueprint */}
+          <Link
+            href="/architecture"
+            className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border transition-all shadow-xs ${
+              pathname === '/architecture'
+                ? 'bg-indigo-600 text-white border-transparent shadow-sm'
+                : 'text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-800'
+            }`}
+          >
+            <Network className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+            <span>Architecture</span>
+          </Link>
+
           {/* PERSISTENT Dean Admin Console Button (Always visible for ADMIN role) */}
           {user?.role === 'ADMIN' && (
             <Link
@@ -191,6 +205,15 @@ export default function Navbar() {
                       <span>Dean Admin Console</span>
                     </Link>
                   )}
+
+                  <Link
+                    href="/architecture"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center space-x-2 px-4 py-2 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  >
+                    <Network className="w-4 h-4 text-indigo-500" />
+                    <span>System Architecture</span>
+                  </Link>
 
                   <Link
                     href="/dashboard"
