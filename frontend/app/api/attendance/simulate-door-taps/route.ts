@@ -37,13 +37,41 @@ export async function POST(req: NextRequest) {
         `DELETE FROM attendance_records WHERE session_id = ?`,
         [sessionId]
       );
+      await execute(
+        `DELETE FROM security_violations WHERE session_id = ?`,
+        [sessionId]
+      );
       return NextResponse.json({
         success: true,
-        message: 'Door tap ledger reset successfully.',
+        message: 'Classroom attendance ledger and security violations reset successfully.',
         tappedCount: 0,
       });
     }
 
+    if (mode === 'IMPOSTOR') {
+      const targetStudent = students[1] || students[0];
+      const violId = 'VIOL-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+      await execute(
+        `INSERT INTO security_violations (violation_id, session_id, student_id, device_fingerprint, violation_type, details, timestamp, cleared_by_faculty)
+         VALUES (?, ?, ?, ?, 'BIOMETRIC_MISMATCH', ?, ?, FALSE)`,
+        [
+          violId,
+          sessionId,
+          targetStudent.user_id,
+          'DOOR_KIOSK_101',
+          `Simulated Card-Swap: Student ${targetStudent.name} (${targetStudent.user_id}) card presented with unverified biometric (23.4% cosine similarity < 85% threshold).`,
+          new Date().toISOString(),
+        ]
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: `Simulated Impostor Proxy Breach: Flagged BIOMETRIC_MISMATCH for ${targetStudent.name} at Door Kiosk 101.`,
+        violationId: violId,
+      });
+    }
+
+    const isBiometric = mode === 'BIOMETRIC_ALL' || mode === 'ALL';
     // Select students based on mode (ALL vs PARTIAL 85%)
     const targetStudents = mode === 'PARTIAL' 
       ? students.filter((_, idx) => idx % 6 !== 0) // ~85%
@@ -51,9 +79,12 @@ export async function POST(req: NextRequest) {
 
     let updatedCount = 0;
     const timestampStr = new Date().toISOString();
+    const finalMethod = isBiometric ? 'RFID_AND_IRIS' : 'DOOR_RFID';
+    const finalStatus = isBiometric ? 'PRESENT' : 'TAPPED_PENDING';
 
     for (const student of targetStudents) {
       const challengePin = Math.floor(100000 + Math.random() * 900000).toString();
+      const deviceIdStr = isBiometric ? 'DOOR_KIOSK_101' : ('PIN:' + challengePin);
 
       const existing = await queryOne<any>(
         `SELECT record_id, status FROM attendance_records WHERE session_id = ? AND student_id = ?`,
@@ -61,12 +92,12 @@ export async function POST(req: NextRequest) {
       );
 
       if (existing) {
-        if (existing.status !== 'PRESENT' && existing.status !== 'LATE') {
+        if (existing.status !== 'PRESENT' || !isBiometric) {
           await execute(
             `UPDATE attendance_records 
-             SET timestamp = ?, method = 'DOOR_RFID', status = 'TAPPED_PENDING', device_id = ?
+             SET timestamp = ?, method = ?, status = ?, device_id = ?
              WHERE session_id = ? AND student_id = ?`,
-            [timestampStr, 'PIN:' + challengePin, sessionId, student.user_id]
+            [timestampStr, finalMethod, finalStatus, deviceIdStr, sessionId, student.user_id]
           );
           updatedCount++;
         }
@@ -74,8 +105,8 @@ export async function POST(req: NextRequest) {
         const recordId = 'REC-' + Math.random().toString(36).substring(2, 10).toUpperCase();
         await execute(
           `INSERT INTO attendance_records (record_id, session_id, student_id, timestamp, method, status, synced, device_id)
-           VALUES (?, ?, ?, ?, 'DOOR_RFID', 'TAPPED_PENDING', FALSE, ?)`,
-          [recordId, sessionId, student.user_id, timestampStr, 'PIN:' + challengePin]
+           VALUES (?, ?, ?, ?, ?, ?, FALSE, ?)`,
+          [recordId, sessionId, student.user_id, timestampStr, finalMethod, finalStatus, deviceIdStr]
         );
         updatedCount++;
       }
@@ -83,7 +114,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Simulated ${updatedCount} classroom door RFID card taps. Students placed in TAPPED_PENDING status.`,
+      message: isBiometric
+        ? `Dual-Factor Kiosk Verified: ${updatedCount} students authenticated via RFID Smart Card + Iris Biometrics (PRESENT).`
+        : `Simulated ${updatedCount} door RFID taps (TAPPED_PENDING).`,
       tappedCount: updatedCount,
       totalEnrolled: students.length,
     });

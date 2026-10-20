@@ -18,7 +18,9 @@ import {
   FileSpreadsheet,
   Zap,
   Sparkles,
-  Check
+  Check,
+  Scan,
+  ShieldAlert
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -101,7 +103,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleSimulateDoorTaps = async (sessionId: string, mode: 'ALL' | 'PARTIAL' | 'RESET') => {
+  const handleSimulateDoorTaps = async (sessionId: string, mode: 'ALL' | 'PARTIAL' | 'RESET' | 'BIOMETRIC_ALL' | 'IMPOSTOR') => {
     setIsSimulatingTaps(true);
     setSimFeedback(null);
     try {
@@ -207,16 +209,27 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Action Button: Conductor Room for Faculty, Telemetry link for Admin */}
-              <div>
+              {/* Action Buttons: Entrance Kiosk + Conductor Room for Faculty */}
+              <div className="flex flex-wrap items-center gap-2">
                 {!isAdmin ? (
-                  <Link
-                    href={`/session/${activeSession.session_id}`}
-                    className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black text-xs font-bold flex items-center space-x-2 transition-all shadow-md"
-                  >
-                    <span>Enter Conductor Room</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                  <>
+                    <Link
+                      href={`/terminal?session=${activeSession.session_id}`}
+                      target="_blank"
+                      className="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center space-x-2 transition-all shadow-sm cursor-pointer"
+                    >
+                      <Scan className="w-3.5 h-3.5" />
+                      <span>Launch Entrance Kiosk</span>
+                    </Link>
+
+                    <Link
+                      href={`/session/${activeSession.session_id}`}
+                      className="px-3.5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black text-xs font-bold flex items-center space-x-1.5 transition-all shadow-md cursor-pointer"
+                    >
+                      <span>Conductor Room</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </>
                 ) : (
                   <span className="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 text-xs font-mono border border-zinc-200 dark:border-zinc-800">
                     Live Session Active
@@ -225,34 +238,43 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* CLASSROOM DOOR RFID TAP SIMULATOR (Beta Demo Mode) */}
+            {/* CLASSROOM ENTRANCE TERMINAL SIMULATOR (Dual-Factor Edge AI) */}
             {!isAdmin && (
               <div className="pt-3 border-t border-zinc-100 dark:border-zinc-900">
                 <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center space-x-1.5">
-                      <Zap className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Classroom Door Tap Simulator (Beta / Demo Mode)</span>
+                      <Scan className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>Classroom Entrance Terminal Simulator (Dual-Factor Edge AI)</span>
                     </span>
                     <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                      Simulate students tapping physical RFID cards at classroom entrance before mobile QR scan.
+                      Simulate entrance kiosk swiping RFID smart cards and running real-time visual vector matching (Cosine Similarity ≥ 85%). Zero student phone dependency.
                     </p>
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
-                      onClick={() => handleSimulateDoorTaps(activeSession.session_id, 'ALL')}
+                      onClick={() => handleSimulateDoorTaps(activeSession.session_id, 'BIOMETRIC_ALL')}
                       disabled={isSimulatingTaps}
-                      className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black text-[11px] font-bold shadow-xs cursor-pointer disabled:opacity-50"
+                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-xs cursor-pointer disabled:opacity-50 flex items-center space-x-1"
                     >
-                      ⚡ Tap All Cards (100%)
+                      <Sparkles className="w-3 h-3" />
+                      <span>⚡ Verify All via Biometrics (100%)</span>
+                    </button>
+                    <button
+                      onClick={() => handleSimulateDoorTaps(activeSession.session_id, 'IMPOSTOR')}
+                      disabled={isSimulatingTaps}
+                      className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold shadow-xs cursor-pointer disabled:opacity-50 flex items-center space-x-1"
+                    >
+                      <ShieldAlert className="w-3 h-3" />
+                      <span>⚡ Test Impostor Swap</span>
                     </button>
                     <button
                       onClick={() => handleSimulateDoorTaps(activeSession.session_id, 'PARTIAL')}
                       disabled={isSimulatingTaps}
                       className="px-3 py-1.5 rounded-xl bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white text-[11px] font-bold shadow-xs cursor-pointer disabled:opacity-50"
                     >
-                      ⚡ Tap 85% at Door
+                      85% Tap
                     </button>
                     <button
                       onClick={() => handleSimulateDoorTaps(activeSession.session_id, 'RESET')}
@@ -297,8 +319,8 @@ export default function DashboardPage() {
 
           <div className="p-5 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-md">
             <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">System Security</span>
-            <p className="text-2xl font-black text-zinc-900 dark:text-white mt-1">2FA-PPV</p>
-            <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1">Door RFID + 15s Rolling Projector QR</p>
+            <p className="text-2xl font-black text-zinc-900 dark:text-white mt-1">Edge AI 2FA</p>
+            <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1">Door RFID + 128D Neural Vector Match</p>
           </div>
         </div>
 

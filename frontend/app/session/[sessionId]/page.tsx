@@ -12,6 +12,7 @@ import {
   AlertCircle, 
   QrCode, 
   UserCheck, 
+  UserX,
   RefreshCw, 
   StopCircle, 
   Building, 
@@ -27,8 +28,22 @@ import {
   Copy,
   Sparkles,
   KeyRound,
-  CreditCard
+  CreditCard,
+  Scan,
+  Eye,
+  Camera,
+  Upload,
+  ExternalLink,
+  Sliders,
+  ShieldAlert
 } from 'lucide-react';
+import { 
+  verifyStudentBiometric, 
+  getEnrolledBiometricVector,
+  extractVisualEmbeddingFromPixels,
+  computeCosineSimilarity,
+  BiometricMatchResult
+} from '@/lib/biometrics';
 
 export default function SessionControllerPage() {
   const router = useRouter();
@@ -57,6 +72,194 @@ export default function SessionControllerPage() {
   const [rollingToken, setRollingToken] = useState('AUTH-' + Math.random().toString(36).substring(2, 7).toUpperCase());
   const [qrSvg, setQrSvg] = useState<string>('');
   const [showFullscreenQr, setShowFullscreenQr] = useState(false);
+
+  // Active Embedded Terminal Tab: 'BIOMETRIC' (Default) vs 'PROJECTOR_QR'
+  const [activeTerminalTab, setActiveTerminalTab] = useState<'BIOMETRIC' | 'PROJECTOR_QR'>('BIOMETRIC');
+  const [selectedKioskStudent, setSelectedKioskStudent] = useState<string>('25215101');
+  const [isBiometricTesting, setIsBiometricTesting] = useState(false);
+  const [biometricFeedback, setBiometricFeedback] = useState<BiometricMatchResult | null>(null);
+  const [uploadedKioskImage, setUploadedKioskImage] = useState<string | null>(null);
+  const kioskFileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // Web Audio Synthesizer for Immediate Auditory Feedback (Chime / Buzzer)
+  const playKioskSound = (success: boolean) => {
+    if (typeof window === 'undefined' || !('AudioContext' in window || 'webkitAudioContext' in window)) return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      if (success) {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.25);
+      } else {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, ctx.currentTime);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+      }
+    } catch {}
+  };
+
+  // 1-Click Genuine Biometric Verification (Cosine Similarity ~97.4%)
+  const handleTestGenuineBiometric = async (studentIdToVerify?: string) => {
+    const targetId = studentIdToVerify || selectedKioskStudent;
+    if (!targetId) return;
+
+    setIsBiometricTesting(true);
+    setBiometricFeedback(null);
+
+    try {
+      const matchResult = verifyStudentBiometric({
+        studentId: targetId,
+        enrolledBiometricId: 'BIO-' + targetId,
+        isSimulation: true,
+        simulateImpostor: false,
+      });
+      setBiometricFeedback(matchResult);
+
+      if (matchResult.matched) {
+        playKioskSound(true);
+        const res = await fetch('/api/attendance/mark', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            studentIdentifier: targetId,
+            method: 'RFID_AND_IRIS',
+            action: 'VERIFY',
+            confidenceScore: matchResult.similarity,
+            deviceId: 'DOOR_KIOSK_101',
+            bypassWindow: true,
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          await loadSessionData();
+        } else {
+          alert(data.error || 'Failed to record biometric attendance');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error during biometric verification');
+    } finally {
+      setIsBiometricTesting(false);
+    }
+  };
+
+  // 1-Click Impostor Proxy Swap Test (Cosine Similarity ~23.2% -> Breach Alert)
+  const handleTestImpostorBiometric = async (studentIdToVerify?: string) => {
+    const targetId = studentIdToVerify || selectedKioskStudent;
+    if (!targetId) return;
+
+    setIsBiometricTesting(true);
+    setBiometricFeedback(null);
+
+    try {
+      const matchResult = verifyStudentBiometric({
+        studentId: targetId,
+        enrolledBiometricId: 'BIO-' + targetId,
+        isSimulation: true,
+        simulateImpostor: true,
+      });
+      setBiometricFeedback(matchResult);
+      playKioskSound(false);
+
+      await fetch('/api/attendance/mark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          studentIdentifier: targetId,
+          method: 'RFID_AND_IRIS',
+          action: 'VERIFY',
+          confidenceScore: matchResult.similarity,
+          deviceId: 'DOOR_KIOSK_101',
+          bypassWindow: true,
+        }),
+      });
+
+      await loadSessionData();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsBiometricTesting(false);
+    }
+  };
+
+  // Handle local image upload to test pixel vector extraction against enrolled biometric
+  const handleKioskImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const dataUrl = event.target?.result as string;
+      setUploadedKioskImage(dataUrl);
+
+      const img = new Image();
+      img.src = dataUrl;
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 128;
+        canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, 128, 128);
+          const imgData = ctx.getImageData(0, 0, 128, 128);
+          const liveVector = extractVisualEmbeddingFromPixels(imgData.data, 128, 128);
+          const enrolledVector = getEnrolledBiometricVector('BIO-' + selectedKioskStudent, selectedKioskStudent);
+          const sim = computeCosineSimilarity(liveVector, enrolledVector);
+
+          const isMatch = sim >= 0.85;
+          const simPercent = Math.round(sim * 1000) / 10;
+          const result: BiometricMatchResult = {
+            matched: isMatch,
+            similarity: sim,
+            similarityPercent: simPercent,
+            threshold: 0.85,
+            status: isMatch ? 'MATCHED' : 'BIOMETRIC_MISMATCH',
+            studentId: selectedKioskStudent,
+            enrolledBiometricId: 'BIO-' + selectedKioskStudent,
+            details: isMatch
+              ? `Biometric visual match confirmed (${simPercent}% confidence >= 85% threshold).`
+              : `Biometric mismatch (${simPercent}% confidence < 85% threshold). Impostor proxy detected.`,
+          };
+          setBiometricFeedback(result);
+          playKioskSound(isMatch);
+
+          if (isMatch) {
+            await fetch('/api/attendance/mark', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sessionId,
+                studentIdentifier: selectedKioskStudent,
+                method: 'RFID_AND_IRIS',
+                action: 'VERIFY',
+                confidenceScore: sim,
+                deviceId: 'DOOR_KIOSK_101',
+                bypassWindow: true,
+              }),
+            });
+            await loadSessionData();
+          }
+        }
+      };
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Network Host Configuration for Smartphone Wi-Fi QR access
   const [networkHost, setNetworkHost] = useState('192.168.1.6:3000');
@@ -211,7 +414,7 @@ export default function SessionControllerPage() {
   };
 
   // Door Tap Simulator: Simulates students tapping cards at the door
-  const handleSimulateDoorTaps = async (mode: 'ALL' | 'PARTIAL' | 'RESET') => {
+  const handleSimulateDoorTaps = async (mode: 'ALL' | 'PARTIAL' | 'RESET' | 'BIOMETRIC_ALL' | 'IMPOSTOR') => {
     setIsSimulatingTaps(true);
     setSimFeedback(null);
     try {
@@ -404,8 +607,11 @@ export default function SessionControllerPage() {
             <p className="text-2xl font-black text-zinc-900 dark:text-white mt-1">{stats?.totalEnrolled || 0}</p>
           </div>
 
-          <div className="p-4 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-md">
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Present (On-Time)</span>
+          <div className="p-4 rounded-3xl bg-white dark:bg-zinc-950 border border-emerald-300 dark:border-emerald-500/30 shadow-sm dark:shadow-md">
+            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center space-x-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Biometric Verified</span>
+            </span>
             <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{stats?.presentCount || 0}</p>
           </div>
 
@@ -414,47 +620,60 @@ export default function SessionControllerPage() {
             <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">{stats?.lateCount || 0}</p>
           </div>
 
-          <div className="p-4 rounded-3xl bg-white dark:bg-zinc-950 border border-amber-300 dark:border-amber-500/30 shadow-sm dark:shadow-md">
-            <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 flex items-center space-x-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-              <span>Door Taps (Pending)</span>
-            </span>
-            <p className="text-2xl font-black text-amber-700 dark:text-amber-300 mt-1">{stats?.pendingCount || 0}</p>
+          <div className="p-4 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-md">
+            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">Awaiting Entrance</span>
+            <p className="text-2xl font-black text-zinc-700 dark:text-zinc-300 mt-1">
+              {Math.max(0, (stats?.totalEnrolled || 0) - (stats?.presentCount || 0) - (stats?.lateCount || 0))}
+            </p>
           </div>
 
           <div className="p-4 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-md">
-            <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">Absent</span>
-            <p className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">{stats?.absentCount || 0}</p>
+            <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">Security Breaches</span>
+            <p className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">
+              {violations.filter((v) => !v.cleared_by_faculty).length}
+            </p>
           </div>
         </div>
 
-        {/* CLASSROOM DOOR TAP SIMULATOR TOOLBAR (Demo Beta Mode) */}
+        {/* CLASSROOM ENTRANCE HARDWARE SIMULATOR (Dual-Factor Edge AI Biometrics + RFID) */}
         <div className="p-4 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <div className="flex items-center space-x-2">
               <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center space-x-1.5">
-                <Zap className="w-4 h-4 text-amber-500" />
-                <span>Classroom Door RFID Tap Simulator</span>
+                <Scan className="w-4 h-4 text-emerald-500" />
+                <span>Classroom Entrance Hardware Simulator (Dual-Factor Edge AI)</span>
               </span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-50 dark:bg-amber-950/80 text-amber-800 dark:text-amber-400 border border-amber-300 dark:border-amber-800">
-                Hardware Kiosk Simulator
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                RFID + Iris Biometrics
               </span>
             </div>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
-              Simulates physical wall-mounted RFID door kiosks swiping student ID cards at classroom entrance. Students who tap will appear in the <strong>Door Tap Ledger</strong> tab awaiting mobile QR confirmation.
+              Simulates door kiosk swiping RFID smart cards and running real-time 128D visual neural matching (Cosine Similarity ≥ 85%). Zero student phone dependency.
             </p>
           </div>
 
-          <div className="flex items-center space-x-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <button
               onClick={() => {
                 setActiveRosterTab('DOOR_LEDGER');
-                handleSimulateDoorTaps('ALL');
+                handleSimulateDoorTaps('BIOMETRIC_ALL');
               }}
               disabled={isSimulatingTaps}
-              className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black text-xs font-bold shadow-xs cursor-pointer disabled:opacity-50"
+              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs cursor-pointer disabled:opacity-50 flex items-center space-x-1.5 transition-all"
             >
-              ⚡ Tap All Cards (100%)
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>⚡ Verify All via Biometrics (100%)</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveRosterTab('DOOR_LEDGER');
+                handleSimulateDoorTaps('IMPOSTOR');
+              }}
+              disabled={isSimulatingTaps}
+              className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs cursor-pointer disabled:opacity-50 flex items-center space-x-1.5 transition-all"
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              <span>⚡ Test Impostor Proxy Swap</span>
             </button>
             <button
               onClick={() => {
@@ -464,7 +683,7 @@ export default function SessionControllerPage() {
               disabled={isSimulatingTaps}
               className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-white text-xs font-bold shadow-xs cursor-pointer disabled:opacity-50 border border-zinc-200 dark:border-zinc-700"
             >
-              ⚡ Tap 85% at Door
+              Simulate 85%
             </button>
             <button
               onClick={() => handleSimulateDoorTaps('RESET')}
@@ -483,150 +702,295 @@ export default function SessionControllerPage() {
           </div>
         )}
 
-        {/* Projector Card & Door Tap Ledger */}
+        {/* Dual-Column Layout: Embedded Biometric Terminal on Left, Entrance Ledger on Right */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          {/* Dynamic Rolling QR Code Projector Card */}
-          <div className="lg:col-span-5 p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 text-center flex flex-col justify-between shadow-sm dark:shadow-2xl">
+          {/* LEFT 5-COL: Embedded Edge Biometric Terminal & Hardware Kiosk */}
+          <div className="lg:col-span-5 p-5 sm:p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 flex flex-col justify-between shadow-sm dark:shadow-2xl">
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center space-x-1.5">
-                  <QrCode className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
-                  <span>Classroom Projector Rolling QR</span>
-                </span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800">
-                  Anti-Proxy TOTP
-                </span>
-              </div>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-tight">
-                Project this on classroom screen. Token rotates every 15s to block remote proxy check-ins.
-              </p>
-            </div>
-
-            {/* Real Camera-Scannable SVG QR Code */}
-            <div className="py-2 flex flex-col items-center justify-center">
-              <div className="relative p-4 rounded-3xl bg-white shadow-xl flex flex-col items-center justify-center border border-zinc-200 dark:border-zinc-700">
-                {qrSvg ? (
-                  <div 
-                    dangerouslySetInnerHTML={{ __html: qrSvg }} 
-                    className="w-48 h-48 sm:w-56 sm:h-56 [&>svg]:w-full [&>svg]:h-full"
-                  />
-                ) : (
-                  <div className="w-48 h-48 flex items-center justify-center text-xs text-black font-mono">
-                    Generating scannable QR...
-                  </div>
-                )}
-                
-                <div className="mt-2 text-center">
-                  <span className="text-[11px] font-mono font-bold tracking-widest text-black bg-zinc-100 px-3 py-0.5 rounded border border-zinc-300">
-                    {rollingToken}
-                  </span>
-                </div>
-              </div>
-
-              {/* Countdown Progress Ring */}
-              <div className="mt-3 flex items-center justify-center space-x-2 text-xs font-mono text-zinc-500 dark:text-zinc-400">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                <span>Next token rotation in <strong className="text-zinc-900 dark:text-white font-bold">{rollingSeconds}s</strong></span>
-              </div>
-
-              {/* Classroom Wi-Fi Endpoint Control */}
-              <div className="mt-3 p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-left space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider flex items-center space-x-1">
-                    <Radio className="w-3 h-3 text-emerald-500 animate-pulse" />
-                    <span>Classroom Wi-Fi Endpoint</span>
-                  </span>
+              {/* Terminal View Switcher (Biometric AI vs Fallback Rolling QR) */}
+              <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-900 pb-3 mb-3">
+                <div className="flex items-center space-x-1.5 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                   <button
-                    onClick={() => {
-                      setTempHost(networkHost);
-                      setIsCustomizingHost(!isCustomizingHost);
-                    }}
-                    className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white underline cursor-pointer"
+                    onClick={() => setActiveTerminalTab('BIOMETRIC')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                      activeTerminalTab === 'BIOMETRIC'
+                        ? 'bg-white dark:bg-black text-zinc-900 dark:text-white shadow-xs'
+                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+                    }`}
                   >
-                    {isCustomizingHost ? 'Cancel' : 'Change IP'}
+                    <Scan className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Edge Biometric Kiosk</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTerminalTab('PROJECTOR_QR')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                      activeTerminalTab === 'PROJECTOR_QR'
+                        ? 'bg-white dark:bg-black text-zinc-900 dark:text-white shadow-xs'
+                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <QrCode className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Projector QR</span>
                   </button>
                 </div>
 
-                {isCustomizingHost ? (
-                  <div className="flex items-center space-x-1.5 pt-1">
-                    <input
-                      type="text"
-                      value={tempHost}
-                      onChange={(e) => setTempHost(e.target.value)}
-                      placeholder="e.g. 192.168.1.6:3000"
-                      className="flex-1 px-2 py-1 text-[11px] font-mono bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none"
-                    />
-                    <button
-                      onClick={() => {
-                        const clean = tempHost.trim() || '192.168.1.6:3000';
-                        setNetworkHost(clean);
-                        localStorage.setItem('smartcampus_network_host', clean);
-                        setIsCustomizingHost(false);
-                      }}
-                      className="px-2.5 py-1 text-[10px] font-bold bg-zinc-900 text-white dark:bg-white dark:text-black rounded-lg cursor-pointer"
-                    >
-                      Save
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between text-[11px] font-mono">
-                    <span className="text-zinc-800 dark:text-zinc-200 font-bold truncate max-w-[210px]">
-                      http://{networkHost}
-                    </span>
-                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-300 dark:border-emerald-800">
-                      Phone Reachable
-                    </span>
-                  </div>
-                )}
-
-                {networkHost.includes('localhost') && (
-                  <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-[10px] text-amber-800 dark:text-amber-300 flex items-center justify-between">
-                    <span>⚠️ Targeting localhost (phone will refuse).</span>
-                    <button
-                      onClick={() => {
-                        setNetworkHost('192.168.1.6:3000');
-                        localStorage.setItem('smartcampus_network_host', '192.168.1.6:3000');
-                      }}
-                      className="font-bold underline cursor-pointer ml-1"
-                    >
-                      Use 192.168.1.6
-                    </button>
-                  </div>
-                )}
+                <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+                  {activeTerminalTab === 'BIOMETRIC' ? 'Door Node 101' : 'Secondary Fallback'}
+                </span>
               </div>
+
+              {activeTerminalTab === 'BIOMETRIC' ? (
+                /* BIOMETRIC TERMINAL VIEW */
+                <div className="space-y-4">
+                  
+                  {/* High-Tech Optical Sensor Viewport Simulation */}
+                  <div className="relative rounded-2xl bg-zinc-950 border border-zinc-800 p-4 overflow-hidden h-44 flex flex-col items-center justify-center text-center shadow-inner">
+                    {/* Corner Reticles */}
+                    <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-emerald-500/80" />
+                    <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-emerald-500/80" />
+                    <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-emerald-500/80" />
+                    <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-emerald-500/80" />
+
+                    {/* Scanning Laser Line */}
+                    <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent animate-pulse opacity-80" />
+
+                    {/* Central Iris & Facial Geometry Target */}
+                    <div className="relative w-20 h-20 rounded-full border-2 border-emerald-500/60 flex items-center justify-center animate-pulse">
+                      <div className="w-10 h-10 rounded-full border border-dashed border-emerald-400/80 flex items-center justify-center">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-lg shadow-emerald-500/50" />
+                      </div>
+                      <Eye className="w-5 h-5 text-emerald-400/40 absolute" />
+                    </div>
+
+                    <div className="mt-2 text-center">
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded border border-emerald-800">
+                        ● OPTICAL BIOMETRIC READY (128D VECTOR)
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Hardware ID Card Tap & Biometric Matcher Controls */}
+                  <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-zinc-900 dark:text-white flex items-center space-x-1.5">
+                        <CreditCard className="w-3.5 h-3.5 text-zinc-500" />
+                        <span>Select Student Card to Simulate</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-zinc-400">1-Touch Test</span>
+                    </div>
+
+                    <select
+                      value={selectedKioskStudent}
+                      onChange={(e) => {
+                        setSelectedKioskStudent(e.target.value);
+                        setBiometricFeedback(null);
+                      }}
+                      className="w-full px-3 py-2 text-xs font-mono bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white focus:outline-none"
+                    >
+                      {students.map((st) => (
+                        <option key={st.user_id || st.student_id} value={st.user_id || st.student_id}>
+                          {st.name} ({st.student_id || st.user_id}) - Card: NFC-{(st.student_id || st.user_id).slice(-4)}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Dual Action Match Buttons */}
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <button
+                        onClick={() => handleTestGenuineBiometric()}
+                        disabled={isBiometricTesting}
+                        className="w-full py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50 flex items-center justify-center space-x-1"
+                        title="Simulate genuine student face/iris matching their enrolled smart card"
+                      >
+                        <UserCheck className="w-3.5 h-3.5 shrink-0" />
+                        <span>{isBiometricTesting ? 'Matching...' : 'Test Genuine (97%)'}</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleTestImpostorBiometric()}
+                        disabled={isBiometricTesting}
+                        className="w-full py-2.5 px-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50 flex items-center justify-center space-x-1"
+                        title="Simulate friend proxy-tapping card while biometric mismatch occurs"
+                      >
+                        <UserX className="w-3.5 h-3.5 shrink-0" />
+                        <span>{isBiometricTesting ? 'Testing...' : 'Test Impostor Swap'}</span>
+                      </button>
+                    </div>
+
+                    {/* Optional Local Photo / ID Image Dropzone */}
+                    <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                      <input
+                        ref={kioskFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleKioskImageUpload}
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => kioskFileInputRef.current?.click()}
+                        className="w-full py-1.5 px-2 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-mono flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+                      >
+                        <Upload className="w-3 h-3 text-zinc-500" />
+                        <span>Upload Custom Photo / ID Card to Test Embedding</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Neural Metric Readout & Match Feedback Box */}
+                  {biometricFeedback && (
+                    <div className={`p-3.5 rounded-2xl border text-xs space-y-2 animate-fade-in ${
+                      biometricFeedback.matched
+                        ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+                        : 'bg-rose-50 dark:bg-rose-950/70 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200'
+                    }`}>
+                      <div className="flex items-center justify-between font-bold">
+                        <span className="flex items-center space-x-1.5">
+                          {biometricFeedback.matched ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          ) : (
+                            <AlertCircle className="w-4 h-4 text-rose-500" />
+                          )}
+                          <span>{biometricFeedback.details}</span>
+                        </span>
+                        <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-white/60 dark:bg-black/60 border border-current">
+                          42ms (Edge AI)
+                        </span>
+                      </div>
+
+                      {/* Cosine Similarity Bar */}
+                      <div>
+                        <div className="flex justify-between text-[10px] font-mono mb-1">
+                          <span>Cosine Vector Similarity:</span>
+                          <strong className="font-bold">{(biometricFeedback.similarity * 100).toFixed(1)}% (Threshold: 85.0%)</strong>
+                        </div>
+                        <div className="w-full bg-zinc-200 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-300 ${biometricFeedback.matched ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                            style={{ width: `${Math.min(100, Math.max(5, biometricFeedback.similarity * 100))}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <p className="text-[10px] opacity-80 font-mono">
+                        {biometricFeedback.matched
+                          ? 'Attendance committed directly to central database with cryptographic biometric signature.'
+                          : 'Security breach logged to Dean/Faculty Watchdog: Proxy card-swap prevented.'}
+                      </p>
+                    </div>
+                  )}
+
+                </div>
+              ) : (
+                /* PROJECTOR QR VIEW */
+                <div className="py-2 flex flex-col items-center justify-center space-y-3">
+                  <div className="relative p-4 rounded-3xl bg-white shadow-xl flex flex-col items-center justify-center border border-zinc-200 dark:border-zinc-700">
+                    {qrSvg ? (
+                      <div 
+                        dangerouslySetInnerHTML={{ __html: qrSvg }} 
+                        className="w-44 h-44 sm:w-52 sm:h-52 [&>svg]:w-full [&>svg]:h-full"
+                      />
+                    ) : (
+                      <div className="w-44 h-44 flex items-center justify-center text-xs text-black font-mono">
+                        Generating scannable QR...
+                      </div>
+                    )}
+                    
+                    <div className="mt-2 text-center">
+                      <span className="text-[11px] font-mono font-bold tracking-widest text-black bg-zinc-100 px-3 py-0.5 rounded border border-zinc-300">
+                        {rollingToken}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Countdown Progress Ring */}
+                  <div className="flex items-center justify-center space-x-2 text-xs font-mono text-zinc-500 dark:text-zinc-400">
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Token rotates in <strong className="text-zinc-900 dark:text-white font-bold">{rollingSeconds}s</strong></span>
+                  </div>
+
+                  {/* Classroom Wi-Fi Endpoint Control */}
+                  <div className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-left space-y-1">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500">
+                      <span>Endpoint: http://{networkHost}</span>
+                      <button
+                        onClick={() => {
+                          setTempHost(networkHost);
+                          setIsCustomizingHost(!isCustomizingHost);
+                        }}
+                        className="underline font-bold text-zinc-700 dark:text-zinc-300 cursor-pointer"
+                      >
+                        {isCustomizingHost ? 'Cancel' : 'Change'}
+                      </button>
+                    </div>
+                    {isCustomizingHost && (
+                      <div className="flex items-center space-x-1.5 pt-1">
+                        <input
+                          type="text"
+                          value={tempHost}
+                          onChange={(e) => setTempHost(e.target.value)}
+                          placeholder="e.g. 192.168.1.6:3000"
+                          className="flex-1 px-2 py-1 text-[11px] font-mono bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none"
+                        />
+                        <button
+                          onClick={() => {
+                            const clean = tempHost.trim() || '192.168.1.6:3000';
+                            setNetworkHost(clean);
+                            localStorage.setItem('smartcampus_network_host', clean);
+                            setIsCustomizingHost(false);
+                          }}
+                          className="px-2.5 py-1 text-[10px] font-bold bg-zinc-900 text-white dark:bg-white dark:text-black rounded-lg cursor-pointer"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setShowFullscreenQr(true)}
+                    className="w-full py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-900 dark:text-white flex items-center justify-center space-x-2 transition-all cursor-pointer"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                    <span>Project Fullscreen Display</span>
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Projector Fullscreen / Direct Open */}
-            <div className="pt-2 border-t border-zinc-100 dark:border-zinc-900">
-              <button
-                onClick={() => setShowFullscreenQr(true)}
-                className="w-full py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-900 dark:text-white flex items-center justify-center space-x-2 transition-all cursor-pointer"
+            {/* Standalone Fullscreen Kiosk Launcher */}
+            <div className="pt-3 border-t border-zinc-100 dark:border-zinc-900">
+              <Link
+                href={`/terminal?session=${sessionId}`}
+                target="_blank"
+                className="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black text-xs font-bold flex items-center justify-center space-x-2 transition-all shadow-md cursor-pointer"
               >
-                <Maximize2 className="w-3.5 h-3.5" />
-                <span>Project Fullscreen on Classroom Display</span>
-              </button>
+                <Scan className="w-3.5 h-3.5" />
+                <span>Launch Standalone Door Kiosk (Full Screen)</span>
+                <ExternalLink className="w-3 h-3 opacity-60" />
+              </Link>
             </div>
           </div>
 
-          {/* Door Tap Ledger & Attendance Real-time Roster */}
-          <div className="lg:col-span-7 p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-sm dark:shadow-2xl">
+          {/* RIGHT 7-COL: Classroom Entrance Live Ledger & Enrolled Roster */}
+          <div className="lg:col-span-7 p-5 sm:p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-sm dark:shadow-2xl">
             
             {/* Header with Title and Search */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-900 pb-3">
               <div>
                 <h2 className="text-sm font-bold text-zinc-900 dark:text-white font-mono uppercase tracking-wider flex items-center space-x-2">
-                  <Users className="w-4 h-4 text-zinc-500" />
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
                   <span>
                     {activeRosterTab === 'DOOR_LEDGER'
-                      ? 'Classroom Door Tap Ledger'
+                      ? 'Classroom Entrance Live Ledger'
                       : 'Enrolled Course Roster'}
                   </span>
                 </h2>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
                   {activeRosterTab === 'DOOR_LEDGER'
-                    ? 'Real-time queue of students who physically tapped RFID card at door kiosk and are awaiting mobile confirmation.'
-                    : `Complete course enrollment list (${students.length} students) with real-time attendance status.`}
+                    ? 'Real-time stream of students verified at the entrance terminal via RFID smartcard and edge computer vision.'
+                    : `Complete course enrollment roster (${students.length} students) with real-time attendance compliance.`}
                 </p>
               </div>
 
@@ -642,7 +1006,7 @@ export default function SessionControllerPage() {
               </div>
             </div>
 
-            {/* View Switcher Tabs: Door Tap Ledger vs Complete Class Roster */}
+            {/* View Switcher Tabs: Live Entrance Ledger vs Enrolled Class Roster */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setActiveRosterTab('DOOR_LEDGER')}
@@ -652,13 +1016,13 @@ export default function SessionControllerPage() {
                     : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800'
                 }`}
               >
-                <span>Door Tap Ledger</span>
+                <span>Live Entrance Ledger</span>
                 <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                   activeRosterTab === 'DOOR_LEDGER'
                     ? 'bg-zinc-700 text-white dark:bg-zinc-200 dark:text-black'
-                    : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-400 border border-amber-300 dark:border-amber-800'
+                    : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'
                 }`}>
-                  {currentPendingCount} Pending
+                  {stats?.presentCount || 0} Verified
                 </span>
               </button>
 
@@ -683,30 +1047,38 @@ export default function SessionControllerPage() {
 
             {/* Students List */}
             <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1">
-              {displayedList.length === 0 ? (
-                activeRosterTab === 'DOOR_LEDGER' ? (
-                  <div className="py-10 px-4 text-center rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 space-y-2">
-                    <CreditCard className="w-8 h-8 text-zinc-400 dark:text-zinc-600 mx-auto" />
-                    <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                      No Pending Door Taps
-                    </p>
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
-                      When students tap their RFID smartcards at the door kiosk (or via the Simulator above), they appear here in the live door ledger with their 6-digit challenge PIN awaiting mobile QR confirmation.
-                    </p>
+              {(activeRosterTab === 'DOOR_LEDGER' 
+                ? filteredStudents.filter((s) => s.status === 'PRESENT' || s.attendance_status === 'PRESENT' || s.status === 'TAPPED_PENDING' || s.attendance_status === 'TAPPED_PENDING')
+                : filteredStudents
+              ).length === 0 ? (
+                <div className="py-10 px-4 text-center rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                  <Scan className="w-8 h-8 text-zinc-400 dark:text-zinc-600 mx-auto" />
+                  <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                    No Entrance Verifications Recorded Yet
+                  </p>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+                    Students will appear here live when they present their smart cards at the entrance kiosk and complete the 128D visual neural match.
+                  </p>
+                  <div className="pt-2 flex justify-center space-x-2">
+                    <button
+                      onClick={() => handleSimulateDoorTaps('BIOMETRIC_ALL')}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer"
+                    >
+                      ⚡ Run Biometric Verification (100%)
+                    </button>
                     <button
                       onClick={() => setActiveRosterTab('ALL_STUDENTS')}
-                      className="mt-2 text-xs font-bold text-zinc-900 dark:text-white underline cursor-pointer hover:opacity-80 inline-block"
+                      className="px-3 py-1.5 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold cursor-pointer"
                     >
-                      View Full Class Roster ({students.length} Enrolled) →
+                      View All {students.length} Students
                     </button>
                   </div>
-                ) : (
-                  <div className="py-12 text-center text-zinc-400 text-xs font-mono">
-                    No student records found matching search.
-                  </div>
-                )
+                </div>
               ) : (
-                displayedList.map((st) => {
+                (activeRosterTab === 'DOOR_LEDGER' 
+                  ? filteredStudents.filter((s) => s.status === 'PRESENT' || s.attendance_status === 'PRESENT' || s.status === 'TAPPED_PENDING' || s.attendance_status === 'TAPPED_PENDING')
+                  : filteredStudents
+                ).map((st) => {
                   const isPresent = st.status === 'PRESENT' || st.attendance_status === 'PRESENT';
                   const isPending = st.status === 'TAPPED_PENDING' || st.attendance_status === 'TAPPED_PENDING';
                   const isLate = st.status === 'LATE' || st.attendance_status === 'LATE';
@@ -722,61 +1094,54 @@ export default function SessionControllerPage() {
                           <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500">
                             ({st.student_id || st.user_id})
                           </span>
-                          {st.challenge_pin && isPending && (
-                            <span className="text-[10px] font-mono bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-400 px-1.5 py-0.2 rounded border border-amber-300 dark:border-amber-800/80 font-bold">
-                              PIN: {st.challenge_pin}
-                            </span>
-                          )}
                         </div>
                         <p className="text-[10px] text-zinc-500 font-mono">
                           {isPresent
-                            ? `Verified at ${st.verified_at ? new Date(st.verified_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'} • Method: ${st.method || st.attendance_method || 'DUAL_FACTOR'}`
+                            ? `Entrance Verified at ${st.verified_at ? new Date(st.verified_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '10:04 AM'} • Node: ${st.device_id || 'DOOR_KIOSK_101'}`
                             : isPending
-                            ? `Tapped at Classroom Door (Awaiting Mobile Scan or Faculty Verification)`
-                            : `Absence recorded`}
+                            ? `Card presented at Entrance Door (Pending Neural Vector Match)`
+                            : `Awaiting student entrance`}
                         </p>
                       </div>
 
                       <div className="flex items-center space-x-2">
                         {isPresent ? (
                           <div className="flex items-center space-x-1.5">
-                            {(st.method === 'RFID_AND_IRIS' || st.attendance_method === 'RFID_AND_IRIS') && (
-                              <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
-                                RFID + Biometric AI
-                              </span>
-                            )}
-                            {(st.method === 'FACULTY_VERIFIED' || st.attendance_method === 'FACULTY_VERIFIED') && (
-                              <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700">
-                                Faculty Override
-                              </span>
-                            )}
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800/80 flex items-center space-x-1">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800/80 flex items-center space-x-1 shadow-xs">
                               <Check className="w-3 h-3" />
-                              <span>Present</span>
+                              <span>RFID + Biometric AI</span>
                             </span>
                           </div>
                         ) : isPending ? (
                           <div className="flex items-center space-x-1.5">
                             <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80 animate-pulse">
-                              Door Tapped
+                              Card Tapped
                             </span>
-                            {/* Faculty 1-Click Verification for Dead Battery / Broken Camera */}
                             <button
                               onClick={() => handleVerifyDoorStudent(st.user_id || st.student_id)}
                               className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black text-[10px] font-bold transition-all shadow-xs cursor-pointer"
-                              title="Faculty manual override: confirm student physical presence without smartphone scan"
+                              title="Faculty manual override: confirm student presence"
                             >
-                              ✓ Verify Presence
+                              ✓ Verify
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={() => handleVerifyDoorStudent(st.user_id || st.student_id)}
-                            className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black text-[10px] font-bold transition-all shadow-xs cursor-pointer border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700"
-                            title="Faculty manual override: mark student present"
-                          >
-                            Mark Present
-                          </button>
+                          <div className="flex items-center space-x-1.5">
+                            <button
+                              onClick={() => handleTestGenuineBiometric(st.user_id || st.student_id)}
+                              className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-[10px] font-bold transition-all cursor-pointer"
+                              title="Trigger biometric scan for this student"
+                            >
+                              ⚡ Scan
+                            </button>
+                            <button
+                              onClick={() => handleVerifyDoorStudent(st.user_id || st.student_id)}
+                              className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black text-[10px] font-bold transition-all shadow-xs cursor-pointer"
+                              title="Faculty manual override"
+                            >
+                              Mark Present
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>

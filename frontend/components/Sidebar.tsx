@@ -8,7 +8,8 @@ import {
   CalendarDays, 
   Users, 
   FileSpreadsheet, 
-  ShieldCheck
+  ShieldCheck,
+  Scan
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -34,7 +35,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
       .catch(() => {});
   }, [userRole, pathname]);
 
-  if (pathname === '/' || pathname === '/terminal' || pathname === '/checkin') {
+  if (pathname === '/' || pathname === '/checkin') {
     return null;
   }
 
@@ -44,6 +45,12 @@ export default function Sidebar({ userRole }: SidebarProps) {
       href: '/dashboard',
       icon: LayoutDashboard,
       badge: null,
+    },
+    {
+      title: 'Classroom Door Kiosk',
+      href: '/terminal',
+      icon: Scan,
+      badge: 'Edge AI',
     },
     {
       title: 'Timetable Matrix',
