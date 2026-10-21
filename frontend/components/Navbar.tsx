@@ -11,7 +11,8 @@ import {
   Sun,
   Moon,
   Clock,
-  Network
+  Network,
+  Code2
 } from 'lucide-react';
 
 interface AuthUser {
@@ -137,6 +138,19 @@ export default function Navbar() {
           >
             <Network className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
             <span>Architecture</span>
+          </Link>
+
+          {/* IEEE OOP UML Blueprint */}
+          <Link
+            href="/oops"
+            className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border transition-all shadow-xs ${
+              pathname === '/oops'
+                ? 'bg-violet-600 text-white border-transparent shadow-sm'
+                : 'text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-800'
+            }`}
+          >
+            <Code2 className="w-3.5 h-3.5 text-violet-500 dark:text-violet-400" />
+            <span>OOP Specs</span>
           </Link>
 
           {/* PERSISTENT Dean Admin Console Button (Always visible for ADMIN role) */}

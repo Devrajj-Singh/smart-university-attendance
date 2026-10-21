@@ -10,7 +10,8 @@ import {
   FileSpreadsheet, 
   ShieldCheck,
   Scan,
-  Network
+  Network,
+  Code2
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -58,6 +59,12 @@ export default function Sidebar({ userRole }: SidebarProps) {
       href: '/architecture',
       icon: Network,
       badge: 'Blueprint',
+    },
+    {
+      title: 'OOP Architecture',
+      href: '/oops',
+      icon: Code2,
+      badge: 'IEEE UML',
     },
     {
       title: 'Timetable Matrix',
