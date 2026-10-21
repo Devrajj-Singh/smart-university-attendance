@@ -415,21 +415,21 @@ export default function OOPArchitecturePage() {
       });
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 sm:p-6 lg:p-8 font-sans selection:bg-indigo-600 selection:text-white">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 p-4 sm:p-6 lg:p-8 font-sans selection:bg-indigo-600 selection:text-white transition-colors duration-200">
       {/* Top Breadcrumb Navigation */}
-      <div className="max-w-7xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800 pb-4">
-        <div className="flex items-center space-x-2 text-xs text-zinc-400">
-          <Link href="/dashboard" className="hover:text-white transition-colors">SmartCampus ERP</Link>
-          <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
-          <Link href="/architecture" className="hover:text-white transition-colors">System Architecture</Link>
-          <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
-          <span className="text-indigo-400 font-semibold font-mono">/oops (IEEE UML Specification)</span>
+      <div className="max-w-7xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+        <div className="flex items-center space-x-2 text-xs text-zinc-500 dark:text-zinc-400">
+          <Link href="/dashboard" className="hover:text-zinc-900 dark:hover:text-white transition-colors">SmartCampus ERP</Link>
+          <ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" />
+          <Link href="/architecture" className="hover:text-zinc-900 dark:hover:text-white transition-colors">System Architecture</Link>
+          <ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" />
+          <span className="text-indigo-600 dark:text-indigo-400 font-semibold font-mono">/oops (IEEE UML Specification)</span>
         </div>
 
         <div className="flex items-center space-x-3">
           <button
             onClick={handleCopyCode}
-            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 transition-all cursor-pointer"
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
           >
             {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{copied ? 'Copied Mermaid Code!' : 'Copy IEEE Mermaid Code'}</span>
@@ -437,9 +437,9 @@ export default function OOPArchitecturePage() {
 
           <Link
             href="/architecture"
-            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 transition-all"
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 transition-all shadow-xs"
           >
-            <Network className="w-3.5 h-3.5 text-indigo-400" />
+            <Network className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
             <span>Interactive Data Flow</span>
           </Link>
         </div>
@@ -447,18 +447,18 @@ export default function OOPArchitecturePage() {
 
       {/* IEEE Academic Header Card */}
       <div className="max-w-7xl mx-auto mb-8">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-zinc-900 via-indigo-950/40 to-zinc-900 border border-zinc-800/80 p-6 sm:p-8 shadow-2xl">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-white via-indigo-50/60 to-white dark:from-zinc-900 dark:via-indigo-950/40 dark:to-zinc-900 border border-zinc-200 dark:border-zinc-800/80 p-6 sm:p-8 shadow-sm dark:shadow-2xl">
           <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 max-w-4xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-mono font-medium mb-3">
-              <BookOpen className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-400 text-xs font-mono font-medium mb-3">
+              <BookOpen className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span>IEEE Std 1471-2000 Academic Class Modeling Specification</span>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white mb-3">
               Java Object-Oriented Architecture & UML Class Diagram
             </h1>
-            <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
-              Formal IEEE-standard documentation of all Java OOP concepts utilized across <code className="text-indigo-300 font-mono">com.smartattendance.*</code>. Covers Abstract Base Classes, Hierarchical Inheritance, Compile-time & Runtime Polymorphism, Data Encapsulation, Checked Exception Hierarchies, and Creational/Structural Design Patterns.
+            <p className="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
+              Formal IEEE-standard documentation of all Java OOP concepts utilized across <code className="text-indigo-600 dark:text-indigo-300 font-mono">com.smartattendance.*</code>. Covers Abstract Base Classes, Hierarchical Inheritance, Compile-time & Runtime Polymorphism, Data Encapsulation, Checked Exception Hierarchies, and Creational/Structural Design Patterns.
             </p>
           </div>
         </div>
@@ -479,8 +479,8 @@ export default function OOPArchitecturePage() {
             onClick={() => setActiveTab(tab.id as any)}
             className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
               activeTab === tab.id
-                ? 'bg-white text-black font-bold shadow-md'
-                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 hover:text-white'
+                ? 'bg-zinc-900 text-white dark:bg-white dark:text-black font-bold shadow-md'
+                : 'bg-white hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-white shadow-xs'
             }`}
           >
             {tab.label}
@@ -493,25 +493,25 @@ export default function OOPArchitecturePage() {
         
         {/* Left: Complete IEEE Mermaid Code Canvas (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="p-5 rounded-3xl bg-zinc-900 border border-zinc-800 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
+          <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800 mb-3">
               <div className="flex items-center space-x-2">
-                <Code2 className="w-4 h-4 text-indigo-400" />
-                <span className="text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold">
+                <Code2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span className="text-xs font-mono uppercase tracking-wider text-zinc-800 dark:text-zinc-300 font-bold">
                   IEEE Mermaid UML Class Diagram Code
                 </span>
               </div>
               <button
                 onClick={handleCopyCode}
-                className="flex items-center space-x-1 text-[11px] font-mono text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                className="flex items-center space-x-1 text-[11px] font-mono text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? 'Copied' : 'Copy Diagram'}</span>
               </button>
             </div>
 
             {/* Mermaid Raw Code Box */}
-            <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800/80 font-mono text-[11px] text-zinc-300 overflow-x-auto max-h-[580px] scrollbar-thin leading-relaxed">
+            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 font-mono text-[11px] text-zinc-800 dark:text-zinc-300 overflow-x-auto max-h-[580px] scrollbar-thin leading-relaxed">
               <pre>{MERMAID_CHART_CODE}</pre>
             </div>
             
@@ -523,9 +523,9 @@ export default function OOPArchitecturePage() {
 
         {/* Right: Interactive Class Spec Inspector (5 Cols) */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="p-5 rounded-3xl bg-zinc-900 border border-zinc-800 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800 mb-4">
-              <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold">
+          <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800 mb-4">
+              <span className="text-xs font-mono uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-bold">
                 Select Class to Inspect OOP Invariants
               </span>
               <span className="text-[10px] text-zinc-500 font-mono">{filteredSpecs.length} classes available</span>
@@ -540,7 +540,7 @@ export default function OOPArchitecturePage() {
                   className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer ${
                     selectedClass.name === spec.name
                       ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30'
-                      : 'bg-zinc-950 hover:bg-zinc-800 text-zinc-400 border border-zinc-800'
+                      : 'bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800'
                   }`}
                 >
                   {spec.stereotype ? `${spec.stereotype} ` : ''}{spec.name}
@@ -549,26 +549,26 @@ export default function OOPArchitecturePage() {
             </div>
 
             {/* Selected Class Details Card */}
-            <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800/80 space-y-4">
+            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 space-y-4">
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-indigo-400 uppercase">
+                  <span className="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 uppercase font-semibold">
                     {selectedClass.package}
                   </span>
                   {selectedClass.stereotype && (
-                    <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                    <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                       {selectedClass.stereotype}
                     </span>
                   )}
                 </div>
-                <h3 className="text-lg font-bold text-white mt-1">
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-white mt-1">
                   {selectedClass.name}
                 </h3>
                 {selectedClass.inheritance && (
-                  <p className="text-xs font-mono text-emerald-400 mt-0.5">{selectedClass.inheritance}</p>
+                  <p className="text-xs font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 font-medium">{selectedClass.inheritance}</p>
                 )}
                 {selectedClass.interfaces && selectedClass.interfaces.map((intf, i) => (
-                  <p key={i} className="text-xs font-mono text-blue-400 mt-0.5">{intf}</p>
+                  <p key={i} className="text-xs font-mono text-blue-600 dark:text-blue-400 mt-0.5 font-medium">{intf}</p>
                 ))}
               </div>
 
@@ -579,7 +579,7 @@ export default function OOPArchitecturePage() {
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedClass.oopConcepts.map((concept, i) => (
-                    <span key={i} className="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-950/60 text-indigo-300 border border-indigo-800/40">
+                    <span key={i} className="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40">
                       {concept}
                     </span>
                   ))}
@@ -591,7 +591,7 @@ export default function OOPArchitecturePage() {
                 <span className="text-[10px] font-mono uppercase text-zinc-500 block mb-1 font-bold">
                   IEEE Design Justification
                 </span>
-                <p className="text-xs text-zinc-300 leading-relaxed bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
+                <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed bg-white dark:bg-zinc-900/50 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
                   {selectedClass.ieeeJustification}
                 </p>
               </div>
@@ -602,7 +602,7 @@ export default function OOPArchitecturePage() {
                   <span className="text-[10px] font-mono uppercase text-zinc-500 block mb-1 font-bold">
                     Fields & Visibility Modifiers
                   </span>
-                  <div className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80 font-mono text-[10px] text-zinc-300 space-y-0.5">
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800/80 font-mono text-[10px] text-zinc-800 dark:text-zinc-300 space-y-0.5">
                     {selectedClass.fields.map((f, i) => (
                       <div key={i}>{f}</div>
                     ))}
@@ -614,17 +614,17 @@ export default function OOPArchitecturePage() {
                 <span className="text-[10px] font-mono uppercase text-zinc-500 block mb-1 font-bold">
                   Key Methods
                 </span>
-                <div className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80 font-mono text-[10px] text-zinc-300 space-y-1 max-h-40 overflow-y-auto scrollbar-thin">
+                <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800/80 font-mono text-[10px] text-zinc-800 dark:text-zinc-300 space-y-1 max-h-40 overflow-y-auto scrollbar-thin">
                   {selectedClass.methods.map((m, i) => (
-                    <div key={i} className={m.includes('@Override') ? 'text-amber-400 font-semibold' : ''}>{m}</div>
+                    <div key={i} className={m.includes('@Override') ? 'text-amber-600 dark:text-amber-400 font-semibold' : ''}>{m}</div>
                   ))}
                 </div>
               </div>
 
               {/* Source File Link */}
-              <div className="pt-2 border-t border-zinc-900 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+              <div className="pt-2 border-t border-zinc-200 dark:border-zinc-900 flex items-center justify-between text-[11px] font-mono text-zinc-500">
                 <span>Source File:</span>
-                <span className="text-zinc-300">{selectedClass.sourceFile}</span>
+                <span className="text-zinc-700 dark:text-zinc-300">{selectedClass.sourceFile}</span>
               </div>
             </div>
           </div>
@@ -634,10 +634,10 @@ export default function OOPArchitecturePage() {
 
       {/* IEEE Specification Table (Paper Style) */}
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="p-6 rounded-3xl bg-zinc-900 border border-zinc-800 shadow-2xl">
+        <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-2xl">
           <div className="flex items-center space-x-2 mb-4">
-            <FileText className="w-5 h-5 text-indigo-400" />
-            <h2 className="text-base font-bold text-white uppercase tracking-wider font-mono">
+            <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <h2 className="text-base font-bold text-zinc-900 dark:text-white uppercase tracking-wider font-mono">
               Table I: Mapping of OOP Pillars to Core System Classes
             </h2>
           </div>
@@ -645,54 +645,54 @@ export default function OOPArchitecturePage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-mono border-collapse">
               <thead>
-                <tr className="border-b border-zinc-800 text-zinc-400 text-[11px]">
+                <tr className="border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 text-[11px]">
                   <th className="py-3 px-4 font-bold uppercase">OOP Concept</th>
                   <th className="py-3 px-4 font-bold uppercase">Design Invariant</th>
                   <th className="py-3 px-4 font-bold uppercase">Concrete Class / Interface</th>
                   <th className="py-3 px-4 font-bold uppercase">Academic Reference</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/60 text-zinc-300">
-                <tr className="hover:bg-zinc-800/30 transition-colors">
-                  <td className="py-3 px-4 text-indigo-400 font-bold">Abstraction</td>
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/60 text-zinc-700 dark:text-zinc-300">
+                <tr className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                  <td className="py-3 px-4 text-indigo-600 dark:text-indigo-400 font-bold">Abstraction</td>
                   <td className="py-3 px-4">Separation of contract from operational implementation</td>
-                  <td className="py-3 px-4 font-semibold text-white">User.java, AttendanceValidator.java, StudentAttendanceOperations.java</td>
+                  <td className="py-3 px-4 font-semibold text-zinc-900 dark:text-white">User.java, AttendanceValidator.java, StudentAttendanceOperations.java</td>
                   <td className="py-3 px-4 text-zinc-500">com.smartattendance.model.User</td>
                 </tr>
-                <tr className="hover:bg-zinc-800/30 transition-colors">
-                  <td className="py-3 px-4 text-emerald-400 font-bold">Inheritance</td>
+                <tr className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">Inheritance</td>
                   <td className="py-3 px-4">Hierarchical generalization with code reuse (IS-A)</td>
-                  <td className="py-3 px-4 font-semibold text-white">Student, Faculty, Admin extend User; Exceptions extend AttendanceException</td>
+                  <td className="py-3 px-4 font-semibold text-zinc-900 dark:text-white">Student, Faculty, Admin extend User; Exceptions extend AttendanceException</td>
                   <td className="py-3 px-4 text-zinc-500">com.smartattendance.model.Student</td>
                 </tr>
-                <tr className="hover:bg-zinc-800/30 transition-colors">
-                  <td className="py-3 px-4 text-amber-400 font-bold">Runtime Polymorphism</td>
+                <tr className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                  <td className="py-3 px-4 text-amber-600 dark:text-amber-400 font-bold">Runtime Polymorphism</td>
                   <td className="py-3 px-4">Dynamic method dispatch via @Override annotations</td>
-                  <td className="py-3 px-4 font-semibold text-white">displayDashboard() & getRole() across User subclasses</td>
+                  <td className="py-3 px-4 font-semibold text-zinc-900 dark:text-white">displayDashboard() & getRole() across User subclasses</td>
                   <td className="py-3 px-4 text-zinc-500">User.java:L46-54</td>
                 </tr>
-                <tr className="hover:bg-zinc-800/30 transition-colors">
-                  <td className="py-3 px-4 text-amber-400 font-bold">Compile-time Polymorphism</td>
+                <tr className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                  <td className="py-3 px-4 text-amber-600 dark:text-amber-400 font-bold">Compile-time Polymorphism</td>
                   <td className="py-3 px-4">Method & constructor signature overloading</td>
-                  <td className="py-3 px-4 font-semibold text-white">validateFacultyAuthorization(...) in AttendanceValidator; Student(...) constructors</td>
+                  <td className="py-3 px-4 font-semibold text-zinc-900 dark:text-white">validateFacultyAuthorization(...) in AttendanceValidator; Student(...) constructors</td>
                   <td className="py-3 px-4 text-zinc-500">AttendanceValidator.java:L30-35</td>
                 </tr>
-                <tr className="hover:bg-zinc-800/30 transition-colors">
-                  <td className="py-3 px-4 text-purple-400 font-bold">Encapsulation</td>
+                <tr className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                  <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-bold">Encapsulation</td>
                   <td className="py-3 px-4">Defensive copies & unmodifiable collection wrappers</td>
-                  <td className="py-3 px-4 font-semibold text-white">Collections.unmodifiableList(subjectIds) in Faculty.java</td>
+                  <td className="py-3 px-4 font-semibold text-zinc-900 dark:text-white">Collections.unmodifiableList(subjectIds) in Faculty.java</td>
                   <td className="py-3 px-4 text-zinc-500">Faculty.java:L38-40</td>
                 </tr>
-                <tr className="hover:bg-zinc-800/30 transition-colors">
-                  <td className="py-3 px-4 text-blue-400 font-bold">Composition</td>
+                <tr className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                  <td className="py-3 px-4 text-blue-600 dark:text-blue-400 font-bold">Composition</td>
                   <td className="py-3 px-4">Loose coupling through component assembly (HAS-A)</td>
-                  <td className="py-3 px-4 font-semibold text-white">AttendanceSession HAS-A Subject, ClassSection, Classroom, Faculty</td>
+                  <td className="py-3 px-4 font-semibold text-zinc-900 dark:text-white">AttendanceSession HAS-A Subject, ClassSection, Classroom, Faculty</td>
                   <td className="py-3 px-4 text-zinc-500">AttendanceSession.java:L22-26</td>
                 </tr>
-                <tr className="hover:bg-zinc-800/30 transition-colors">
-                  <td className="py-3 px-4 text-rose-400 font-bold">Singleton Pattern</td>
+                <tr className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                  <td className="py-3 px-4 text-rose-600 dark:text-rose-400 font-bold">Singleton Pattern</td>
                   <td className="py-3 px-4">Single point of database connectivity with private constructor</td>
-                  <td className="py-3 px-4 font-semibold text-white">DatabaseManager.getInstance()</td>
+                  <td className="py-3 px-4 font-semibold text-zinc-900 dark:text-white">DatabaseManager.getInstance()</td>
                   <td className="py-3 px-4 text-zinc-500">DatabaseManager.java:L25-52</td>
                 </tr>
               </tbody>
@@ -702,13 +702,13 @@ export default function OOPArchitecturePage() {
       </div>
 
       {/* Footer Meta */}
-      <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-4 text-xs text-zinc-500 font-mono">
+      <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-zinc-200 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-4 text-xs text-zinc-500 font-mono">
         <div>SmartCampus v3.0 OOP Specification • IEEE Std 1471-2000 Compliant</div>
         <div className="flex items-center space-x-4">
-          <Link href="/architecture" className="hover:text-zinc-300 transition-colors">E2E Architecture</Link>
-          <Link href="/terminal" className="hover:text-zinc-300 transition-colors">Door Kiosk</Link>
-          <Link href="/dashboard" className="hover:text-zinc-300 transition-colors">Faculty Dashboard</Link>
-          <Link href="/admin" className="hover:text-zinc-300 transition-colors">Dean Console</Link>
+          <Link href="/architecture" className="hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors">E2E Architecture</Link>
+          <Link href="/terminal" className="hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors">Door Kiosk</Link>
+          <Link href="/dashboard" className="hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors">Faculty Dashboard</Link>
+          <Link href="/admin" className="hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors">Dean Console</Link>
         </div>
       </div>
     </div>

@@ -98,7 +98,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar (md and above) */}
-      <aside className="hidden md:flex w-64 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex-col justify-between shrink-0 min-h-[calc(100vh-4rem)] p-4 transition-colors text-zinc-900 dark:text-zinc-100 shadow-xs">
+      <aside className="hidden md:flex w-64 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex-col justify-between shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto p-4 transition-colors text-zinc-900 dark:text-zinc-100 shadow-xs">
         <div className="space-y-6">
           <div>
             <p className="px-3 text-[10px] font-mono font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">

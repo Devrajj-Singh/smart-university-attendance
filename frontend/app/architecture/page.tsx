@@ -376,14 +376,14 @@ export default function ArchitecturePage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 sm:p-6 lg:p-8 font-sans selection:bg-indigo-600 selection:text-white">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 p-4 sm:p-6 lg:p-8 font-sans selection:bg-indigo-600 selection:text-white transition-colors duration-200">
       {/* Top Breadcrumb & Return to App */}
-      <div className="max-w-7xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800 pb-4">
-        <div className="flex items-center space-x-2 text-xs text-zinc-400">
-          <Link href="/dashboard" className="hover:text-white transition-colors">SmartCampus ERP</Link>
-          <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
-          <span className="text-indigo-400 font-semibold font-mono">/architecture</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+      <div className="max-w-7xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+        <div className="flex items-center space-x-2 text-xs text-zinc-500 dark:text-zinc-400">
+          <Link href="/dashboard" className="hover:text-zinc-900 dark:hover:text-white transition-colors">SmartCampus ERP</Link>
+          <ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" />
+          <span className="text-indigo-600 dark:text-indigo-400 font-semibold font-mono">/architecture</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 dark:border-indigo-500/30">
             Public Blueprint
           </span>
         </div>
@@ -391,7 +391,7 @@ export default function ArchitecturePage() {
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setShowPitchModal(!showPitchModal)}
-            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 transition-all cursor-pointer"
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Upwork Client Pitch</span>
@@ -400,17 +400,17 @@ export default function ArchitecturePage() {
           <a
             href="/smartcampus-n8n-workflow.json"
             download="smartcampus-n8n-workflow.json"
-            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 transition-all"
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 transition-all shadow-xs"
           >
-            <Download className="w-3.5 h-3.5 text-emerald-400" />
+            <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>Download n8n JSON</span>
           </a>
 
           <Link
             href="/terminal"
-            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 transition-all"
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-300 transition-all shadow-xs"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
+            <ExternalLink className="w-3.5 h-3.5 text-zinc-500" />
             <span>Open Door Kiosk</span>
           </Link>
         </div>
@@ -418,23 +418,23 @@ export default function ArchitecturePage() {
 
       {/* Hero Header */}
       <div className="max-w-7xl mx-auto mb-8">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-zinc-900 via-indigo-950/40 to-zinc-900 border border-zinc-800/80 p-6 sm:p-8 shadow-2xl">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-white via-indigo-50/60 to-white dark:from-zinc-900 dark:via-indigo-950/40 dark:to-zinc-900 border border-zinc-200 dark:border-zinc-800/80 p-6 sm:p-8 shadow-sm dark:shadow-2xl">
           <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 max-w-3xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-mono font-medium mb-3">
-              <Zap className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-400 text-xs font-mono font-medium mb-3">
+              <Zap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span>Full-Stack AI Automation & Event-Driven Enterprise Architecture</span>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white mb-3">
               Interactive E2E System Architecture Mind-Map
             </h1>
-            <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+            <p className="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
               Explore how SmartCampus eliminates 100% of proxy check-ins using Edge Computer Vision, commits atomic records to PostgreSQL, streams HMAC-signed webhooks to an automated n8n workflow, syncs HubSpot & HighLevel CRMs, and delivers automated Twilio parent alerts.
             </p>
           </div>
 
           {/* Interactive Simulation Controls */}
-          <div className="mt-6 flex flex-wrap items-center gap-3 pt-6 border-t border-zinc-800/60">
+          <div className="mt-6 flex flex-wrap items-center gap-3 pt-6 border-t border-zinc-200 dark:border-zinc-800/60">
             <button
               onClick={handleRunSimulation}
               disabled={isSimulating}
@@ -449,8 +449,8 @@ export default function ArchitecturePage() {
             </button>
 
             {isSimulating && (
-              <span className="text-xs text-amber-400 font-mono flex items-center space-x-1.5 animate-pulse">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+              <span className="text-xs text-amber-600 dark:text-amber-400 font-mono flex items-center space-x-1.5 animate-pulse font-medium">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                 <span>Active packet in transit: {ARCHITECTURE_NODES[simulationStep]?.name}</span>
               </span>
             )}
@@ -466,8 +466,8 @@ export default function ArchitecturePage() {
             onClick={() => setActiveCategory(cat.id)}
             className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
               activeCategory === cat.id
-                ? 'bg-white text-black font-bold shadow-md'
-                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 hover:text-white'
+                ? 'bg-zinc-900 text-white dark:bg-white dark:text-black font-bold shadow-md'
+                : 'bg-white hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-white shadow-xs'
             }`}
           >
             {cat.label}
@@ -481,7 +481,7 @@ export default function ArchitecturePage() {
         {/* Left: 8 Interactive Stage Nodes Topology (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold">
+            <span className="text-xs font-mono uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-bold">
               Data Flow Sequence (Stages 1 → 6)
             </span>
             <span className="text-xs text-zinc-500">
@@ -500,10 +500,10 @@ export default function ArchitecturePage() {
                   onClick={() => setSelectedNode(node)}
                   className={`relative p-4 rounded-2xl border transition-all cursor-pointer group ${
                     isSimActive
-                      ? 'bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/50 shadow-2xl shadow-amber-500/20 scale-[1.01]'
+                      ? 'bg-amber-50/80 border-amber-500 dark:bg-amber-950/40 ring-2 ring-amber-500/50 shadow-xl shadow-amber-500/20 scale-[1.01]'
                       : isSelected
-                      ? 'bg-zinc-900 border-indigo-500 ring-1 ring-indigo-500/40 shadow-xl shadow-indigo-500/10'
-                      : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                      ? 'bg-indigo-50/50 dark:bg-zinc-900 border-indigo-500 ring-1 ring-indigo-500/40 shadow-md dark:shadow-xl shadow-indigo-500/10'
+                      : 'bg-white dark:bg-zinc-900/60 hover:bg-zinc-50 dark:hover:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-xs'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -523,17 +523,17 @@ export default function ArchitecturePage() {
                             {node.category}
                           </span>
                         </div>
-                        <h3 className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors mt-0.5">
+                        <h3 className="text-sm font-bold text-zinc-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors mt-0.5">
                           {node.name}
                         </h3>
-                        <p className="text-xs text-zinc-400 mt-1 line-clamp-2">
+                        <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 line-clamp-2">
                           {node.shortDesc}
                         </p>
 
                         {/* Tech Stack Tags */}
                         <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
                           {node.techStack.map((tech, i) => (
-                            <span key={i} className="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-800/80 text-zinc-300 border border-zinc-700/60">
+                            <span key={i} className="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700/60">
                               {tech}
                             </span>
                           ))}
@@ -543,14 +543,14 @@ export default function ArchitecturePage() {
 
                     {/* Right Badges */}
                     <div className="text-right shrink-0">
-                      <div className="text-[11px] font-mono font-semibold text-emerald-400">
+                      <div className="text-[11px] font-mono font-semibold text-emerald-600 dark:text-emerald-400">
                         {node.latency}
                       </div>
                       <div className="text-[10px] text-zinc-500 font-mono mt-0.5">
                         {node.sla}
                       </div>
                       {isSelected && (
-                        <span className="inline-block mt-2 px-2 py-0.5 rounded text-[9px] font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                        <span className="inline-block mt-2 px-2 py-0.5 rounded text-[9px] font-mono bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
                           Selected
                         </span>
                       )}
@@ -560,7 +560,7 @@ export default function ArchitecturePage() {
                   {/* Pulsing Connector Arrow to Next Node */}
                   {index < filteredNodes.length - 1 && (
                     <div className="absolute -bottom-3 left-8 z-10 flex items-center justify-center">
-                      <div className="w-0.5 h-3 bg-zinc-800 group-hover:bg-indigo-500 transition-colors" />
+                      <div className="w-0.5 h-3 bg-zinc-200 dark:bg-zinc-800 group-hover:bg-indigo-500 transition-colors" />
                     </div>
                   )}
                 </div>
@@ -571,50 +571,50 @@ export default function ArchitecturePage() {
 
         {/* Right: Selected Node Live Inspector (5 Cols) */}
         <div className="lg:col-span-5 sticky top-20 space-y-4">
-          <div className="p-5 rounded-3xl bg-zinc-900 border border-zinc-800 shadow-2xl">
+          <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-2xl">
             {/* Inspector Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-zinc-800 pb-4">
+            <div className="flex items-start justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
               <div className="flex items-center space-x-3">
                 <div className={`p-2.5 rounded-xl border ${getNodeColor(selectedNode.category)}`}>
                   {getNodeIcon(selectedNode.iconName)}
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold">
+                  <span className="text-[10px] font-mono uppercase text-zinc-500 dark:text-zinc-400 font-bold">
                     Node Inspector • Stage {selectedNode.stageNumber}
                   </span>
-                  <h2 className="text-base font-bold text-white">
+                  <h2 className="text-base font-bold text-zinc-900 dark:text-white">
                     {selectedNode.name}
                   </h2>
                 </div>
               </div>
 
               <div className="text-right">
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                   {selectedNode.category}
                 </span>
               </div>
             </div>
 
             {/* Upwork Commercial Value Proposition */}
-            <div className="mt-4 p-3.5 rounded-2xl bg-indigo-950/30 border border-indigo-800/40 text-xs">
-              <div className="flex items-center space-x-1.5 text-indigo-300 font-bold mb-1">
+            <div className="mt-4 p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/40 text-xs">
+              <div className="flex items-center space-x-1.5 text-indigo-700 dark:text-indigo-300 font-bold mb-1">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Upwork Client & Business Value:</span>
               </div>
-              <p className="text-zinc-300 leading-relaxed text-[11px]">
+              <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed text-[11px]">
                 {selectedNode.upworkHighlight}
               </p>
             </div>
 
             {/* Specifications Matrix */}
             <div className="grid grid-cols-2 gap-2 mt-4 text-xs font-mono">
-              <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800/80">
+              <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80">
                 <span className="text-zinc-500 text-[10px] uppercase block">Benchmark Latency</span>
-                <span className="text-emerald-400 font-bold text-xs mt-0.5 block">{selectedNode.latency}</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs mt-0.5 block">{selectedNode.latency}</span>
               </div>
-              <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800/80">
+              <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80">
                 <span className="text-zinc-500 text-[10px] uppercase block">Fault Tolerance SLA</span>
-                <span className="text-indigo-400 font-bold text-xs mt-0.5 block">{selectedNode.sla}</span>
+                <span className="text-indigo-600 dark:text-indigo-400 font-bold text-xs mt-0.5 block">{selectedNode.sla}</span>
               </div>
             </div>
 
@@ -622,18 +622,18 @@ export default function ArchitecturePage() {
             {selectedNode.requestPayload && (
               <div className="mt-4">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] font-mono font-bold text-zinc-400">
+                  <span className="text-[11px] font-mono font-bold text-zinc-500 dark:text-zinc-400">
                     Sample Ingestion Payload (JSON)
                   </span>
                   <button
                     onClick={() => handleCopy(selectedNode.requestPayload || '', 'req')}
-                    className="flex items-center space-x-1 text-[10px] font-mono text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                    className="flex items-center space-x-1 text-[10px] font-mono text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
                   >
-                    {copiedKey === 'req' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    {copiedKey === 'req' ? <Check className="w-3 h-3 text-emerald-500 dark:text-emerald-400" /> : <Copy className="w-3 h-3" />}
                     <span>{copiedKey === 'req' ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
-                <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800/80 font-mono text-[10px] text-zinc-300 overflow-x-auto max-h-48 scrollbar-thin">
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 font-mono text-[10px] text-zinc-800 dark:text-zinc-300 overflow-x-auto max-h-48 scrollbar-thin">
                   <pre>{selectedNode.requestPayload}</pre>
                 </div>
               </div>
@@ -643,18 +643,18 @@ export default function ArchitecturePage() {
             {selectedNode.responsePayload && (
               <div className="mt-4">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] font-mono font-bold text-zinc-400">
+                  <span className="text-[11px] font-mono font-bold text-zinc-500 dark:text-zinc-400">
                     Output Response Payload (JSON)
                   </span>
                   <button
                     onClick={() => handleCopy(selectedNode.responsePayload || '', 'res')}
-                    className="flex items-center space-x-1 text-[10px] font-mono text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                    className="flex items-center space-x-1 text-[10px] font-mono text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
                   >
-                    {copiedKey === 'res' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    {copiedKey === 'res' ? <Check className="w-3 h-3 text-emerald-500 dark:text-emerald-400" /> : <Copy className="w-3 h-3" />}
                     <span>{copiedKey === 'res' ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
-                <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800/80 font-mono text-[10px] text-zinc-300 overflow-x-auto max-h-48 scrollbar-thin">
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 font-mono text-[10px] text-zinc-800 dark:text-zinc-300 overflow-x-auto max-h-48 scrollbar-thin">
                   <pre>{selectedNode.responsePayload}</pre>
                 </div>
               </div>
@@ -664,18 +664,18 @@ export default function ArchitecturePage() {
             {selectedNode.curlExample && (
               <div className="mt-4">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] font-mono font-bold text-zinc-400">
+                  <span className="text-[11px] font-mono font-bold text-zinc-500 dark:text-zinc-400">
                     cURL Command
                   </span>
                   <button
                     onClick={() => handleCopy(selectedNode.curlExample || '', 'curl')}
-                    className="flex items-center space-x-1 text-[10px] font-mono text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                    className="flex items-center space-x-1 text-[10px] font-mono text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
                   >
-                    {copiedKey === 'curl' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    {copiedKey === 'curl' ? <Check className="w-3 h-3 text-emerald-500 dark:text-emerald-400" /> : <Copy className="w-3 h-3" />}
                     <span>{copiedKey === 'curl' ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
-                <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800/80 font-mono text-[10px] text-emerald-400/90 overflow-x-auto max-h-24 scrollbar-thin">
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 font-mono text-[10px] text-emerald-700 dark:text-emerald-400/90 overflow-x-auto max-h-24 scrollbar-thin">
                   <pre>{selectedNode.curlExample}</pre>
                 </div>
               </div>
@@ -687,28 +687,28 @@ export default function ArchitecturePage() {
 
       {/* Upwork Client Pitch Modal */}
       {showPitchModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="max-w-2xl w-full bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-left relative max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md">
+          <div className="max-w-2xl w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-left relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
               <div className="flex items-center space-x-2">
-                <Sparkles className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-lg font-bold text-white">Upwork Proposal & Showcase Pitch</h3>
+                <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Upwork Proposal & Showcase Pitch</h3>
               </div>
               <button
                 onClick={() => setShowPitchModal(false)}
-                className="text-zinc-500 hover:text-white text-sm font-bold px-2 py-1 cursor-pointer"
+                className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white text-sm font-bold px-2 py-1 cursor-pointer"
               >
                 ✕ Close
               </button>
             </div>
 
-            <div className="mt-4 space-y-4 text-xs text-zinc-300 leading-relaxed">
-              <p className="font-semibold text-white">
+            <div className="mt-4 space-y-4 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
+              <p className="font-semibold text-zinc-900 dark:text-white">
                 Copy and paste this pitch directly into your Upwork proposals or client messages:
               </p>
 
-              <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 font-sans text-xs text-zinc-300 space-y-3">
-                <p className="font-bold text-indigo-300">
+              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-sans text-xs text-zinc-800 dark:text-zinc-300 space-y-3">
+                <p className="font-bold text-indigo-700 dark:text-indigo-300">
                   Hi [Client],
                 </p>
                 <p>
@@ -717,7 +717,7 @@ export default function ArchitecturePage() {
                 <p>
                   I recently engineered <strong>SmartCampus ERP</strong>, an enterprise-grade autonomous attendance & compliance management system:
                 </p>
-                <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
+                <ul className="list-disc pl-5 space-y-1.5 text-zinc-600 dark:text-zinc-400">
                   <li><strong>Edge Computer Vision & Biometrics:</strong> Sub-1.5s dual physical verification (128-D Cosine Similarity) that permanently eliminates 100% of proxy check-ins.</li>
                   <li><strong>Autonomous AI Compliance Agent:</strong> Powered by Grok/OpenAI LLM with a 100% free deterministic heuristic velocity calculator that forecasts 14-day statutory breaches.</li>
                   <li><strong>Signed Webhook Event Bus:</strong> Real-time HMAC SHA-256 event dispatcher with exponential backoff retries.</li>
@@ -728,7 +728,7 @@ export default function ArchitecturePage() {
                 <p>
                   Would you be open to a 10-minute screenshare where I can walk you through the live n8n workflow and AI agent?
                 </p>
-                <p className="font-semibold text-indigo-300">
+                <p className="font-semibold text-indigo-700 dark:text-indigo-300">
                   Best regards,<br />Devraj
                 </p>
               </div>
@@ -751,13 +751,13 @@ export default function ArchitecturePage() {
       )}
 
       {/* Footer System Meta */}
-      <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-4 text-xs text-zinc-500 font-mono">
+      <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-zinc-200 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-4 text-xs text-zinc-500 font-mono">
         <div>SmartCampus v3.0 Enterprise Architecture • ISO-9001 Compliant</div>
         <div className="flex items-center space-x-4">
-          <Link href="/terminal" className="hover:text-zinc-300 transition-colors">Door Kiosk</Link>
-          <Link href="/admin" className="hover:text-zinc-300 transition-colors">Dean Console</Link>
-          <Link href="/dashboard" className="hover:text-zinc-300 transition-colors">Faculty Dashboard</Link>
-          <Link href="/reports" className="hover:text-zinc-300 transition-colors">Audit Reports</Link>
+          <Link href="/terminal" className="hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors">Door Kiosk</Link>
+          <Link href="/admin" className="hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors">Dean Console</Link>
+          <Link href="/dashboard" className="hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors">Faculty Dashboard</Link>
+          <Link href="/reports" className="hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors">Audit Reports</Link>
         </div>
       </div>
     </div>
