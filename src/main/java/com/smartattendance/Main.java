@@ -13,7 +13,10 @@ import com.smartattendance.model.AttendanceSession;
 import com.smartattendance.model.BiometricDevice;
 import com.smartattendance.model.Student;
 import com.smartattendance.sync.SyncService;
+import com.smartattendance.ui.AppContext;
+import com.smartattendance.ui.LoginFrame;
 
+import javax.swing.SwingUtilities;
 import java.time.LocalDateTime;
 
 public class Main {
@@ -26,6 +29,62 @@ public class Main {
         databaseManager.initializeSchema();
         DatabaseSeeder.seed();
 
+        if (args.length > 0 && "--demo".equals(args[0])) {
+            runConsoleDemo();
+            return;
+        }
+
+        if (args.length > 0 && "--smoke".equals(args[0])) {
+            runUiSmokeTest();
+            return;
+        }
+
+        launchUi();
+    }
+
+    /**
+     * Launches the desktop UI. Data access runs through the existing
+     * service/repository layer and the shared application context.
+     */
+    private static void launchUi() {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                AppContext context = new AppContext();
+                new LoginFrame(context);
+            } catch (Exception e) {
+                System.err.println("Failed to start the attendance UI: " + e.getMessage());
+                e.printStackTrace();
+                System.exit(1);
+            }
+        });
+    }
+
+    private static void runUiSmokeTest() {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                com.smartattendance.ui.AppContext context = new com.smartattendance.ui.AppContext();
+                context.setCurrentFaculty(new com.smartattendance.dashboard.LoginService()
+                        .login("F001", "faculty123"));
+                com.smartattendance.ui.MainFrame main = new com.smartattendance.ui.MainFrame(context);
+                main.setVisible(true);
+                for (com.smartattendance.ui.components.Sidebar.Page page
+                        : com.smartattendance.ui.components.Sidebar.Page.values()) {
+                    main.navigate(page);
+                }
+                System.out.println("[SMOKE] UI constructed and navigated all pages OK");
+                System.exit(0);
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.exit(2);
+            }
+        });
+    }
+
+    /**
+     * Original console demonstration, kept under --demo so the academic
+     * walkthrough still runs headlessly.
+     */
+    private static void runConsoleDemo() {
         AttendanceService attendanceService = new AttendanceService();
         StudentRepository studentRepository = new StudentRepository();
         SyncService syncService = new SyncService();

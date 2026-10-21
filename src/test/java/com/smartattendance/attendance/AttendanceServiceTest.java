@@ -11,12 +11,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Lightweight, dependency-free test harness (no JUnit needed - this
- * environment has no internet access to fetch it from Maven Central).
- * Swap this for real JUnit 5 @Test methods once the team's build can reach
- * Maven Central; the assertions below map 1:1 onto JUnit assertions.
+ * Lightweight standalone (non-JUnit) harness for the attendance business
+ * rules. The authoritative, Maven-run test suite is IntegratedSystemTest
+ * (JUnit 5). This class is kept as a plain `main()`-based runner that can be
+ * invoked directly when you want a quick headless check of the validator
+ * without the full JUnit lifecycle.
  *
- * Run with:  java -cp target/classes:target/test-classes com.smartattendance.attendance.AttendanceServiceTest
+ * Run with:
+ *   java -cp target/classes:target/test-classes com.smartattendance.attendance.AttendanceServiceTest
  */
 public class AttendanceServiceTest {
 

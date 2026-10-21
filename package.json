@@ -1,0 +1,25 @@
+{
+  "name": "smart-university-attendance",
+  "version": "1.0.0",
+  "description": "Enterprise Smart University Attendance Management & Mobile Edge Biometric System",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run start",
+    "lint": "npm --prefix frontend run lint",
+    "test:e2e": "node frontend/test-e2e.mjs",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "keywords": [
+    "attendance",
+    "nextjs",
+    "biometric",
+    "university",
+    "edge-computing",
+    "qr-anti-proxy"
+  ],
+  "author": "Devraj Singh",
+  "license": "MIT"
+}

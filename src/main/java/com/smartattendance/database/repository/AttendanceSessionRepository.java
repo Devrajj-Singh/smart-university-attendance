@@ -41,6 +41,10 @@ public class AttendanceSessionRepository {
                 .collect(Collectors.toList());
     }
 
+    public List<AttendanceSession> findAllSessions() {
+        return attendanceRepository.findAllSessions();
+    }
+
     public void update(AttendanceSession session) {
         attendanceRepository.updateSessionStatus(session.getSessionId(), session.getStatus(), session.getActualFacultyId());
     }
